@@ -1,6 +1,18 @@
-<!doctype html><html lang="mr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09090d"><title>AK Video Editor</title><link rel="stylesheet" href="style.css"></head><body><header><div class="brand"><b>AK</b><span>AK Video Editor</span></div><button id="new">नवीन</button></header><main><div class="preview" id="preview"><video id="video" controls playsinline></video><div id="empty">🎬<strong>फोटो / व्हिडिओ निवडा</strong><small>AK Video Editor V2</small></div><div id="overlay"></div></div><div class="bar"><label>＋ Media<input id="media" type="file" accept="video/*,image/*" multiple></label><label>🎵 Music<input id="music" type="file" accept="audio/*"></label><button data-a="trim">✂️ Trim</button><button data-a="split">✂️ Split</button><button data-a="ratio">📱 9:16</button><button data-a="text">📝 Text</button><button data-a="zoom">🔍 Zoom</button><button data-a="speed">⏩ Speed</button><button data-a="filter">✨ Filter</button><button data-a="volume">🔊 Volume</button><button data-a="transition">🎞️ Transition</button><button data-a="clipSettings">🎬 Clip Settings</button><button id="playAll">▶️ Play All</button><button id="export">⬇️ MP4 / Export</button></div><div id="musicInfo"></div><div id="timeline"><div id="track">Media जोडल्यावर Timeline येथे दिसेल</div></div><div id="tools"></div><div id="projectTools" class="tools">
-  <button id="undoBtn">↶ Undo</button><button id="redoBtn">↷ Redo</button>
-  <button id="saveProject">💾 Save Project</button><button id="loadProject">📂 Load Project</button>
-  <input id="projectFile" type="file" accept=".json,application/json" hidden>
-</div>
-<div id="advancedTools" class="tools"><button data-adv="keyframes">🎯 Keyframes</button><button data-adv="crop">✂️ Crop</button><button data-adv="adjust">🎨 Adjust</button><button data-adv="transform">🔄 Transform</button><button data-adv="waveform">🎵 Waveform</button></div><div id="status"></div></main><footer>AK Video Editor • Mobile Creator</footer><script src="app.js"></script></body></html>
+<!doctype html><html lang="mr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09090d"><title>AK Video Editor</title><link rel="stylesheet" href="style.css"></head><body>
+<header><div class="brand"><b>AK</b><span>AK Video Editor</span></div><div class="top-actions"><button id="new">＋ New</button><button id="saveProject">💾 Save</button><button id="export">Export</button></div></header>
+<main>
+<section class="editor-shell">
+<aside class="sidebar">
+<button data-a="trim">✂️<span>Trim</span></button><button data-a="split">🔪<span>Split</span></button><button data-a="text">T<span>Text</span></button><button data-a="zoom">🔍<span>Zoom</span></button><button data-a="speed">⏩<span>Speed</span></button><button data-a="filter">✨<span>Filters</span></button><button data-a="volume">🔊<span>Audio</span></button><button data-a="transition">◈<span>Transition</span></button><button data-a="clipSettings">⚙️<span>Clip</span></button><button data-adv="keyframes">🎯<span>Keyframe</span></button><button data-adv="crop">▣<span>Crop</span></button><button data-adv="adjust">🎨<span>Adjust</span></button><button data-adv="transform">↻<span>Transform</span></button><button data-adv="waveform">〽️<span>Waveform</span></button></aside>
+<section class="workspace">
+<div class="preview-wrap"><div class="preview" id="preview"><video id="video" controls playsinline></video><div id="empty">🎬<strong>फोटो / व्हिडिओ निवडा</strong><small>AK Video Editor</small></div><div id="overlay"></div></div></div>
+<div class="media-bar"><label>＋ Add media<input id="media" type="file" accept="video/*,image/*" multiple></label><label>🎵 Add audio<input id="music" type="file" accept="audio/*"></label><button id="playAll">▶ Play</button><button id="undoBtn">↶</button><button id="redoBtn">↷</button><button id="loadProject">📂 Load</button><input id="projectFile" type="file" accept=".json,application/json" hidden></div>
+<div id="musicInfo"></div>
+<div class="timeline-head"><b>Timeline</b><span>Drag clips • Trim handles • Transitions</span></div>
+<div id="timeline"><div id="track">Media जोडल्यावर Timeline येथे दिसेल</div></div>
+<div id="tools"></div>
+<div id="projectTools" class="tools legacy-project"><button id="saveProject2">💾 Save Project</button></div>
+<div id="advancedTools" class="tools"></div>
+<div id="status"></div>
+</section></section>
+</main><footer>AK Video Editor • CapCut-inspired creator workspace</footer><script src="app.js"></script><script>document.getElementById("saveProject2")?.addEventListener("click",()=>document.getElementById("saveProject")?.click());</script></body></html>
