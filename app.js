@@ -53,7 +53,7 @@ function keyframeExportState(clip,time){
  const list=keyframes.filter(k=>k.clip===clip).sort((a,b)=>a.time-b.time);if(!list.length)return null;
  let a=list[0],b=list[list.length-1];
  if(time<=a.time)b=a;else if(time>=b.time)a=b;else for(let j=0;j<list.length-1;j++)if(time>=list[j].time&&time<=list[j+1].time){a=list[j];b=list[j+1];break}
- const span=Math.max(.001,b.time-a.time),q=a===b?0:Math.max(0,Math.min(1,(time-a.time)/span)),lerp=(x,y)=>Number(x??1)+(Number(y??x??1)-Number(x??1))*q;
+ const span=Math.max(.001,b.time-a.time),raw=a===b?0:Math.max(0,Math.min(1,(time-a.time)/span)),q=raw*raw*(3-2*raw),lerp=(x,y)=>Number(x??1)+(Number(y??x??1)-Number(x??1))*q;
  return {zoom:lerp(a.zoom,b.zoom),rotation:lerp(a.rotation,b.rotation),opacity:lerp(a.opacity,b.opacity)};
 }
 function drawKeyframedVideo(ctx,video,canvas,state){
@@ -142,7 +142,7 @@ function applyKeyframePreview(time){
  if(time<=a.time)b=a; else if(time>=b.time)a=list[list.length-1]; else{
   for(let i=0;i<list.length-1;i++)if(time>=list[i].time&&time<=list[i+1].time){a=list[i];b=list[i+1];break}
  }
- const span=Math.max(.001,b.time-a.time),p=a===b?0:Math.max(0,Math.min(1,(time-a.time)/span));
+ const span=Math.max(.001,b.time-a.time),raw=a===b?0:Math.max(0,Math.min(1,(time-a.time)/span)),p=raw*raw*(3-2*raw);
  const lerp=(x,y)=>Number(x??1)+(Number(y??x??1)-Number(x??1))*p;
  const z=lerp(a.zoom,b.zoom),r=lerp(a.rotation,b.rotation),o=lerp(a.opacity,b.opacity);
  video.style.transform="scale("+z+") rotate("+r+"deg)"+((settings().mirror)?" scaleX(-1)":"");
