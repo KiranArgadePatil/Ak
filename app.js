@@ -66,6 +66,7 @@ function renderTimeline(){
  }).join("")+'</div>';
  const gapButtons=[...track.querySelectorAll(".clip")];
  gapButtons.forEach((clip,i)=>{if(i<gapButtons.length-1){const s=clipSettings[i]||settings();const b=document.createElement("button");b.className="tl-transition";b.textContent=s.transition==="fade"?"↔ Fade":s.transition==="flash"?"⚡ Flash":"＋ Transition";b.onclick=e=>{e.stopPropagation();s.transition=s.transition==="none"?"fade":s.transition==="fade"?"flash":"none";renderTimeline();msg("Transition: "+(s.transition==="none"?"None":s.transition==="fade"?"Fade":"Flash"))};clip.after(b)}});
+ addTimelineThumbs();
  const clips=[...track.querySelectorAll(".clip")];
  clips.forEach(c=>{
    c.onclick=e=>{if(e.target.classList.contains("handle"))return;currentIndex=+c.dataset.i;splitPoints=[];load(files[currentIndex]);renderTimeline()};
