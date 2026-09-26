@@ -54,7 +54,7 @@ function keyframeExportState(clip,time){
  let a=list[0],b=list[list.length-1];
  if(time<=a.time)b=a;else if(time>=b.time)a=b;else for(let j=0;j<list.length-1;j++)if(time>=list[j].time&&time<=list[j+1].time){a=list[j];b=list[j+1];break}
  const span=Math.max(.001,b.time-a.time),raw=a===b?0:Math.max(0,Math.min(1,(time-a.time)/span)),q=raw*raw*(3-2*raw),lerp=(x,y)=>Number(x??1)+(Number(y??x??1)-Number(x??1))*q;
- return {zoom:lerp(a.zoom,b.zoom),rotation:lerp(a.rotation,b.rotation),opacity:lerp(a.opacity,b.opacity)};
+ return {zoom:lerp(a.zoom,b.zoom),rotation:lerp(a.rotation,b.rotation),opacity:lerp(a.opacity,b.opacity),x:lerp(a.x,b.x),y:lerp(a.y,b.y)};
 }
 function drawKeyframedVideo(ctx,video,canvas,state){
  const k=state||{zoom:1,rotation:0,opacity:1};ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,k.opacity));ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(Number(k.rotation||0)*Math.PI/180);ctx.scale(Number(k.zoom||1),Number(k.zoom||1));ctx.drawImage(video,-canvas.width/2,-canvas.height/2,canvas.width,canvas.height);ctx.restore();
