@@ -161,7 +161,7 @@ function applyVisualSettings(){
 });
 document.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>act(b.dataset.a));
 
-function act(a){
+function act(a){\n if(!restoringHistory) pushHistory();
  if(!video.src && !currentImage){tools.innerHTML="<b>आधी Photo / Video निवडा.</b>";return}
  if(a==="trim"){
    const d=currentImage?5:(video.duration||0);
