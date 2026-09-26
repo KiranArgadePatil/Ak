@@ -338,6 +338,12 @@ async function playAll(){
   preview.style.opacity="1";
  }
 }
+function openEditor(){const h=$("#homeScreen"),e=$("#editorScreen");if(h)h.hidden=true;if(e)e.hidden=false;}
+function openHome(){const h=$("#homeScreen"),e=$("#editorScreen");if(h)h.hidden=false;if(e)e.hidden=true;}
+$("#homeNewProject")?.addEventListener("click",openEditor);
+$("#homeImport")?.addEventListener("click",openEditor);
+$("#bottomNew")?.addEventListener("click",openEditor);
+$("#backHome")?.addEventListener("click",openHome);
 $("#playAll").onclick=playAll;
 $("#export").onclick=exportVideo;
 $("#new").onclick=()=>location.reload();
