@@ -46,6 +46,8 @@ function renderTimeline(){
    const s=clipSettings[i]||settings(),active=i===currentIndex?" active":"";
    return '<span class="clip'+active+'" draggable="true" data-i="'+i+'"><i class="tl-handle handle left" data-side="left"></i>'+ (i+1)+" • "+f.name.slice(0,16)+'<small>'+ (f.type.startsWith("image/")?"Photo":"Video")+(f.type.startsWith("image/")?" • "+s.duration+"s":"")+'</small><i class="tl-handle handle right" data-side="right"></i></span>';
  }).join("")+'</div>';
+ const gapButtons=[...track.querySelectorAll(".clip")];
+ gapButtons.forEach((clip,i)=>{if(i<gapButtons.length-1){const s=clipSettings[i]||settings();const b=document.createElement("button");b.className="tl-transition";b.textContent=s.transition==="fade"?"↔ Fade":s.transition==="flash"?"⚡ Flash":"＋ Transition";b.onclick=e=>{e.stopPropagation();s.transition=s.transition==="none"?"fade":s.transition==="fade"?"flash":"none";renderTimeline();msg("Transition: "+(s.transition==="none"?"None":s.transition==="fade"?"Fade":"Flash"))};clip.after(b)}});
  const clips=[...track.querySelectorAll(".clip")];
  clips.forEach(c=>{
    c.onclick=e=>{if(e.target.classList.contains("handle"))return;currentIndex=+c.dataset.i;splitPoints=[];load(files[currentIndex]);renderTimeline()};
