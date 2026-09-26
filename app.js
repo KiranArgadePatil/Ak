@@ -125,6 +125,9 @@ function extFor(m){return m.startsWith("video/mp4")?"mp4":"webm"}
 window.transitionType="none";
 
 let exportConfig={width:1280,height:720,fps:30,bitrate:6000000};
+function multiTrackClipInfo(){const rows=document.querySelectorAll("#overlayTracks .track-row");rows.forEach((r,i)=>{r.dataset.trackIndex=i;r.style.minHeight="36px";const body=r.querySelector("div");if(body){body.style.minHeight="30px";body.style.position="relative";body.style.overflowX="auto"}});msg("🎚️ Multi-track layout सक्रिय ✓")}
+function duplicateCurrentClipToTrack(){if(!files.length){msg("आधी media जोडा.",true);return}const i=currentIndex,f=files[i];files.push(f);const src=clipSettings[i]||{},copy=JSON.parse(JSON.stringify(src));clipSettings.push(copy);currentIndex=files.length-1;renderOverlayTracks();msg("➕ Clip duplicate करून नवीन track तयार ✓")}
+function moveCurrentClipEarlier(){if(currentIndex<=0){msg("हा clip आधीच पहिला आहे.",true);return}const i=currentIndex;[files[i-1],files[i]]=[files[i],files[i-1]];[clipSettings[i-1],clipSettings[i]]=[clipSettings[i],clipSettings[i-1]];currentIndex=i-1;renderOverlayTracks();msg("↔️ Track clip order बदलला ✓")}
 function openExportSettings(){
  tools.innerHTML='<b>⚙️ Export Settings</b><label>Quality <select id="exQuality"><option value="720">720p</option><option value="1080" selected>1080p</option></select></label><label>FPS <select id="exFps"><option>24</option><option selected>30</option><option>60</option></select></label><label>Bitrate <select id="exBitrate"><option value="4000000">4 Mbps</option><option value="6000000" selected>6 Mbps</option><option value="10000000">10 Mbps</option></select></label><button id="applyExport">Apply</button><div class="hint">Browser supportनुसार MP4 किंवा WebM export होईल.</div>';
 }
@@ -554,3 +557,5 @@ document.addEventListener("click",e=>{
  if(t.id==="extractAudio"){msg("Current video audio export pipeline मध्ये वापरला जातो ✓");return}
  if(t.id==="voiceRecord"){const text=settings().text||"AK Video Editor voice preview";if("speechSynthesis" in window){const u=new SpeechSynthesisUtterance(text);u.lang="mr-IN";speechSynthesis.speak(u)}return}
 });
+
+function openMultiTrackEditor(){tools.innerHTML='<b>🎚️ Multi-track</b><button id="mtRefresh">↻ Refresh Tracks</button><button id="mtDuplicate">＋ Duplicate Clip</button><button id="mtEarlier">← Move Earlier</button><small>Video, Text, Sticker, Audio, Caption आणि Effect tracks वेगळे दिसतात.</small>';document.getElementById("mtRefresh").onclick=()=>{multiTrackClipInfo();renderOverlayTracks()};document.getElementById("mtDuplicate").onclick=duplicateCurrentClipToTrack;document.getElementById("mtEarlier").onclick=moveCurrentClipEarlier;multiTrackClipInfo()}
