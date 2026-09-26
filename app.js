@@ -271,9 +271,29 @@ async function exportVideo(){
  }
  rec.stop();
 }
+async function playTransitionPreview(type,duration){
+ const ms=Math.max(100,Math.min(2000,Number(duration||.45)*1000));
+ if(!preview||!["flash","fade","zoom","slide","wipe","spin","blur"].includes(type))return;
+ const op=preview.style.opacity,tr=preview.style.transform,fi=preview.style.filter,cl=preview.style.clipPath;
+ preview.style.willChange="transform,opacity,filter,clip-path";
+ const start=performance.now();
+ await new Promise(resolve=>{
+  const frame=()=>{
+   const p=Math.min(1,(performance.now()-start)/ms),e=1-Math.pow(1-p,3);
+   preview.style.opacity=type==="flash"?(p<.5?".15":"1"):String(e);
+   if(type==="zoom")preview.style.transform="scale("+(0.65+0.35*e)+")";
+   else if(type==="slide")preview.style.transform="translate3d("+(100*(1-e))+"%,0,0)";
+   else if(type==="spin")preview.style.transform="rotate("+((1-e)*180)+"deg) scale("+(0.75+0.25*e)+")";
+   else if(type==="blur")preview.style.filter="blur("+(8*(1-e))+"px)";
+   else if(type==="wipe")preview.style.clipPath="inset(0 "+((1-e)*100)+"% 0 0)";
+   if(p>=1){preview.style.opacity=op||"1";preview.style.transform=tr||"";preview.style.filter=fi||"";preview.style.clipPath=cl||"none";preview.style.willChange="auto";resolve()}else requestAnimationFrame(frame);
+  };
+  requestAnimationFrame(frame);
+ });
+}
 async function playAll(){
  if(!files.length){msg("आधी Photo / Video निवडा.",true);return}
- const oldSrc=video.src,oldDisplay=video.style.display,oldText=overlay.textContent,oldFilter=video.style.filter;
+ const oldSrc=video.src,oldDisplay=video.style.display,oldText=overlay.textContent,oldFilter=video.style.filter,oldTransform=preview.style.transform,oldClip=preview.style.clipPath;
  try{
   for(let i=0;i<files.length;i++){
    currentIndex=i;renderTimeline();
@@ -292,32 +312,14 @@ async function playAll(){
     await new Promise(resolve=>{const check=()=>video.currentTime>=b||video.ended?(video.pause(),resolve()):requestAnimationFrame(check);check()});
    }
    URL.revokeObjectURL(url);
-   if(i<files.length-1){
-    const t=s.transition||"none";
-    const ms=Math.max(100,Math.min(2000,Number(s.transitionDuration||0.45)*1000));
-    if(["flash","fade","zoom","slide","wipe","spin","blur"].includes(t)){
-     const baseOpacity=preview.style.opacity||"1",baseTransform=preview.style.transform||"",baseFilter=preview.style.filter||"",baseClip=preview.style.clipPath||"none",started=performance.now();
-     await new Promise(resolve=>{
-      const fx=()=>{
-       const p=Math.min(1,(performance.now()-started)/ms);
-       preview.style.opacity=t==="flash"?(p<.5?"0.15":"1"):String(p);
-       if(t==="zoom")preview.style.transform="scale("+(0.65+0.35*p)+")";
-       if(t==="slide")preview.style.transform="translateX("+(100*(1-p))+"%)";
-       if(t==="spin")preview.style.transform="rotate("+((1-p)*180)+"deg) scale("+(0.75+0.25*p)+")";
-       if(t==="blur")preview.style.filter="blur("+(8*(1-p))+"px)";
-       if(t==="wipe")preview.style.clipPath="inset(0 "+((1-p)*100)+"% 0 0)";
-       if(p>=1){preview.style.opacity=baseOpacity;preview.style.transform=baseTransform;preview.style.filter=baseFilter;preview.style.clipPath=baseClip;resolve()}else requestAnimationFrame(fx);
-      };
-      requestAnimationFrame(fx);
-     });
-    }
-   }
+   if(i<files.length-1)await playTransitionPreview(s.transition||"none",s.transitionDuration||.45);
   }
   msg("Preview पूर्ण झाले ✓");
  }finally{
   video.pause();video.style.filter=oldFilter;overlay.textContent=oldText;video.style.display=oldDisplay;
   if(oldSrc){video.src=oldSrc;video.load()}
-  preview.style.opacity="1";
+  preview.style.opacity="1";preview.style.transform=oldTransform||"";preview.style.clipPath=oldClip||"none";preview.style.filter="";
+  preview.style.willChange="auto";
  }
 }
 function selectTemplate(name){openEditor();msg("Template निवडला: "+name+" ✓");}
