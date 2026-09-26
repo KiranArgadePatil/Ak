@@ -95,42 +95,66 @@ function extFor(m){return m.startsWith("video/mp4")?"mp4":"webm"}
 window.transitionType="none";
 
 async function exportVideo(){
- if(!video.src||!video.duration){msg("Export साठी सध्या Video निवडा.",true);return}
+ if(!files.length){msg("आधी Photo / Video निवडा.",true);return}
+ const videoFiles=files.filter(f=>f.type.startsWith("video/"));
+ if(!videoFiles.length){msg("Export साठी किमान एक Video आवश्यक आहे.",true);return}
  const mime=mimeType();if(!mime){msg("या browser मध्ये Export समर्थित नाही.",true);return}
- const oldTime=video.currentTime,oldRate=video.playbackRate;
+ const oldSrc=video.src,oldTime=video.currentTime,oldDisplay=video.style.display;
  const canvas=document.createElement("canvas");
  if(ratio==="9:16"){canvas.width=720;canvas.height=1280}else if(ratio==="1:1"){canvas.width=1080;canvas.height=1080}else if(ratio==="16:9"){canvas.width=1280;canvas.height=720}else{canvas.width=video.videoWidth||1280;canvas.height=video.videoHeight||720}
  const ctx=canvas.getContext("2d"),stream=canvas.captureStream(30);
- let audioCtx=null,dest=null,vs=null,ms=null,musicEl=null;
+ let audioCtx=null,dest=null,vs=null,musicEl=null;
  try{
    audioCtx=new(window.AudioContext||window.webkitAudioContext)();dest=audioCtx.createMediaStreamDestination();
    vs=audioCtx.createMediaElementSource(video);const vg=audioCtx.createGain();vg.gain.value=video.volume;vs.connect(vg).connect(dest);
-   if(musicFile){musicEl=new Audio(URL.createObjectURL(musicFile));musicEl.loop=true;ms=audioCtx.createMediaElementSource(musicEl);const mg=audioCtx.createGain();mg.gain.value=+($("#musicVol")?.value||.7);ms.connect(mg).connect(dest)}
+   if(musicFile){musicEl=new Audio(URL.createObjectURL(musicFile));musicEl.loop=true;const ms=audioCtx.createMediaElementSource(musicEl);const mg=audioCtx.createGain();mg.gain.value=+($("#musicVol")?.value||.7);ms.connect(mg).connect(dest)}
    dest.stream.getAudioTracks().forEach(t=>stream.addTrack(t));
  }catch(e){console.warn(e)}
  const rec=new MediaRecorder(stream,{mimeType,videoBitsPerSecond:6000000}),chunks=[];
  rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
  rec.onstop=()=>{
    const blob=new Blob(chunks,{type:mime}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="AK-Video-"+Date.now()+"."+extFor(mime);a.click();
-   if(audioCtx)audioCtx.close();if(musicEl)musicEl.pause();video.currentTime=oldTime;video.playbackRate=oldRate;msg("Export पूर्ण झाले ✅");
+   if(audioCtx)audioCtx.close();if(musicEl)musicEl.pause();
+   if(oldSrc){video.src=oldSrc;video.currentTime=oldTime} video.style.display=oldDisplay;msg("Multi-Clip Export पूर्ण झाले ✅");
  };
- const start=Math.max(0,trimStart),end=Math.min(video.duration,trimEnd||video.duration);
- video.currentTime=start;await new Promise(r=>video.addEventListener("seeked",r,{once:true}));
  if(audioCtx)await audioCtx.resume();if(musicEl)musicEl.play().catch(()=>{});
- rec.start(200);msg("Export चालू आहे…");
- const draw=()=>{
-   if(rec.state!=="recording")return;
-   ctx.fillStyle="#000";ctx.fillRect(0,0,canvas.width,canvas.height);
-   const vw=video.videoWidth||canvas.width,vh=video.videoHeight||canvas.height,src=vw/vh,dst=canvas.width/canvas.height;
-   let dw=canvas.width,dh=canvas.height,dx=0,dy=0;
-   if(src>dst){dh=canvas.height;dw=dh*src;dx=(canvas.width-dw)/2}else{dw=canvas.width;dh=dw/src;dy=(canvas.height-dh)/2}
-   ctx.filter=video.style.filter||"none";ctx.drawImage(video,dx,dy,dw,dh);ctx.filter="none";
-   if(overlay.textContent){ctx.font=Math.max(28,canvas.width*.055)+"px system-ui";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.strokeStyle="#000";ctx.lineWidth=7;ctx.strokeText(overlay.textContent,canvas.width/2,canvas.height*.16);ctx.fillText(overlay.textContent,canvas.width/2,canvas.height*.16)}
-   if(video.currentTime>=end||video.ended){video.pause();rec.stop();return}
-   requestAnimationFrame(draw);
- };
- video.play();draw();
+ rec.start(200);msg("Multi-Clip Export चालू आहे…");
+ let first=true;
+ for(let i=0;i<videoFiles.length;i++){
+   const f=videoFiles[i],url=URL.createObjectURL(f);
+   video.src=url;video.style.display="block";video.load();
+   await new Promise((resolve,reject)=>{video.onloadedmetadata=resolve;video.onerror=reject});
+   let startTime=0,endTime=video.duration;
+   if(i===currentIndex){startTime=Math.max(0,trimStart);endTime=Math.min(video.duration,trimEnd||video.duration)}
+   video.currentTime=startTime;await new Promise(r=>video.addEventListener("seeked",r,{once:true}));
+   const transition=.45;
+   if(!first){
+     if(window.transitionType==="fade"){
+       ctx.fillStyle="#000";ctx.fillRect(0,0,canvas.width,canvas.height);
+       for(let a=0;a<12;a++){ctx.globalAlpha=a/12;ctx.drawImage(video,0,0,canvas.width,canvas.height);await new Promise(r=>setTimeout(r,25))}
+       ctx.globalAlpha=1;
+     }else if(window.transitionType==="flash"){
+       ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);await new Promise(r=>setTimeout(r,120));
+     }
+   }
+   first=false;
+   video.play();let last=performance.now();
+   await new Promise(resolve=>{
+     const draw=()=>{
+       if(rec.state!=="recording"){resolve();return}
+       ctx.fillStyle="#000";ctx.fillRect(0,0,canvas.width,canvas.height);
+       const vw=video.videoWidth||canvas.width,vh=video.videoHeight||canvas.height,src=vw/vh,dst=canvas.width/canvas.height;
+       let dw=canvas.width,dh=canvas.height,dx=0,dy=0;
+       if(src>dst){dh=canvas.height;dw=dh*src;dx=(canvas.width-dw)/2}else{dw=canvas.width;dh=dw/src;dy=(canvas.height-dh)/2}
+       ctx.filter=video.style.filter||"none";ctx.drawImage(video,dx,dy,dw,dh);ctx.filter="none";
+       if(overlay.textContent){ctx.font=Math.max(28,canvas.width*.055)+"px system-ui";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.strokeStyle="#000";ctx.lineWidth=7;ctx.strokeText(overlay.textContent,canvas.width/2,canvas.height*.16);ctx.fillText(overlay.textContent,canvas.width/2,canvas.height*.16)}
+       if(video.currentTime>=endTime||video.ended){video.pause();resolve();return}
+       requestAnimationFrame(draw)
+     };requestAnimationFrame(draw)
+   });
+   URL.revokeObjectURL(url);
+ }
+ rec.stop();
 }
-
 $("#export").onclick=exportVideo;
 $("#new").onclick=()=>location.reload();
