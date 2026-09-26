@@ -73,6 +73,17 @@ function renderStickers(){
   overlay.appendChild(el);
  });
 }
+function renderTransitionTracks(){
+ const lane=document.querySelector("#timeline");if(!lane)return;
+ document.querySelectorAll(".transition-marker").forEach(x=>x.remove());
+ const pxPerSec=32;
+ for(let i=1;i<files.length;i++){
+  const c=clipSettings[i]||{};
+  const type=c.transition||"none"; if(type==="none")continue;
+  const left=files.slice(0,i).reduce((a,_,k)=>a+Math.max(.1,(clipSettings[k]||{}).duration||photoDuration||5),0);
+  const x=document.createElement("div");x.className="transition-marker";x.dataset.clip=i;x.style.left=(left*pxPerSec-10)+"px";x.textContent="↔ "+type+" "+Number(c.transitionDuration||.45).toFixed(1)+"s";lane.appendChild(x);
+ }
+}
 function drawStickerObjectsExport(ctx,canvas,c,time){
  const arr=Array.isArray(c.stickers)?c.stickers:[];
  arr.forEach(st=>{
@@ -140,7 +151,7 @@ tools.onclick=e=>{\n const t=e.target; if(t.dataset.chroma){settings().chroma=t.
  if(t.dataset.addsticker){addSticker(t.dataset.addsticker);msg("Sticker added ✓");return} if(t.dataset.stickeranim){settings().stickerAnimation=t.dataset.stickeranim;applyStickerAnimationPreview();msg("Sticker Animation: "+t.textContent+" ✓");return} if(t.id==="speedCustom"){settings().speed=+t.value;video.playbackRate=+t.value;$("#speedVal").textContent=t.value+"×"} if(t.id==="adjB"){settings().brightness=+t.value;applyVisualSettings()} if(t.id==="adjC"){settings().contrast=+t.value;applyVisualSettings()} if(t.id==="adjS"){settings().saturation=+t.value;applyVisualSettings()} if(t.id==="adjH"){settings().hue=+t.value;applyVisualSettings()} if(t.id==="adjL"){settings().lightness=+t.value;applyVisualSettings()} if(t.id==="adjBlur"){settings().blur=+t.value;applyVisualSettings()}
  if(t.dataset.v && video.src){playbackSpeed=+t.dataset.v;settings().speed=playbackSpeed;video.playbackRate=playbackSpeed;msg("Speed: "+playbackSpeed+"×")} if(t.dataset.curve){settings().speedCurve=t.dataset.curve==="none"?null:t.dataset.curve;msg("Speed Curve: "+(t.dataset.curve==="none"?"Normal":t.dataset.curve)+" ✓");}
  if(t.dataset.f!==undefined && video.src){video.style.filter=t.dataset.f;settings().filter=t.dataset.f;}
- if(t.dataset.t){window.transitionType=t.dataset.t;settings().transition=t.dataset.t;msg("Transition: "+t.dataset.t)} if(t.id==="trDuration"){settings().transitionDuration=Number(t.value);$("#trDurationVal").textContent=Number(t.value).toFixed(1)+"s";return}
+ if(t.dataset.t){window.transitionType=t.dataset.t;settings().transition=t.dataset.t;renderTransitionTracks();msg("Transition: "+t.dataset.t+" ✓")} if(t.id==="trDuration"){settings().transitionDuration=Number(t.value);$("#trDurationVal").textContent=Number(t.value).toFixed(1)+"s";renderTransitionTracks();return}
  if(t.id==="trZoom"){settings().zoom=+t.value;applyVisualSettings();return} if(t.id==="trRot"){settings().rotation=+t.value;applyVisualSettings();return} if(t.id==="trOpacity"){settings().opacity=+t.value;applyVisualSettings();return} if(t.id==="mirrorBtn"){settings().mirror=!settings().mirror;applyVisualSettings();msg("Mirror "+(settings().mirror?"ON":"OFF"));return} if(t.id==="zoom"){zoom=+t.value;settings().zoom=zoom;applyVisualSettings();msg("Zoom: "+zoom+"×")}
  if(t.dataset.r){ratio=t.dataset.r;preview.classList.toggle("video-916",ratio==="9:16");preview.classList.toggle("ratio-square",ratio==="1:1");preview.classList.toggle("ratio-wide",ratio==="16:9");msg("Ratio: "+ratio)}
  if(t.id==="add"){overlay.textContent=$("#txt").value;settings().text=$("#txt").value;renderOverlayTracks();}
@@ -152,7 +163,7 @@ tools.onclick=e=>{\n const t=e.target; if(t.dataset.chroma){settings().chroma=t.
  }
  if(t.id==="addSplit"){
    const p=video.currentTime;
-   if(p>0&&p<video.duration&&!splitPoints.some(x=>Math.abs(x-p)<.2)){splitPoints.push(p);splitPoints.sort((a,b)=>a-b);renderTimeline();msg("Split point: "+fmt(p))}
+   if(p>0&&p<video.duration&&!splitPoints.some(x=>Math.abs(x-p)<.2)){splitPoints.push(p);splitPoints.sort((a,b)=>a-b);renderTimeline();renderTransitionTracks();msg("Split point: "+fmt(p))}
  }
  if(t.id==="clearSplit"){splitPoints=[];renderTimeline();msg("Split points काढले.")}
 };
