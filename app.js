@@ -53,12 +53,14 @@ function act(a){
  if(a==="speed")tools.innerHTML='<button data-v=".5">0.5×</button><button data-v="1">1×</button><button data-v="1.5">1.5×</button><button data-v="2">2×</button>';
  if(a==="filter")tools.innerHTML='<button data-f="none">Original</button><button data-f="grayscale(1)">B&W</button><button data-f="sepia(1)">Sepia</button><button data-f="contrast(1.4) saturate(1.3)">Vivid</button>';
  if(a==="volume")tools.innerHTML='<span>Video</span><input id="vol" type="range" min="0" max="1" step=".05" value="'+video.volume+'">';
+ if(a==="transition")tools.innerHTML='<b>🎞️ Transition</b><button data-t="none">None</button><button data-t="fade">Fade</button><button data-t="flash">Flash</button><div class="hint">Clip बदलताना transition निवडा.</div>';
 }
 
 tools.onclick=e=>{
  const t=e.target;
  if(t.dataset.v && video.src)video.playbackRate=+t.dataset.v;
  if(t.dataset.f!==undefined && video.src)video.style.filter=t.dataset.f;
+ if(t.dataset.t){window.transitionType=t.dataset.t;msg("Transition: "+t.dataset.t)}
  if(t.dataset.r){ratio=t.dataset.r;preview.classList.toggle("video-916",ratio==="9:16");preview.classList.toggle("ratio-square",ratio==="1:1");preview.classList.toggle("ratio-wide",ratio==="16:9");msg("Ratio: "+ratio)}
  if(t.id==="add")overlay.textContent=$("#txt").value;
  if(t.id==="clearText")overlay.textContent="";
@@ -87,8 +89,10 @@ $("#music").onchange=e=>{
 musicInfo.onclick=e=>{if(e.target.id==="removeMusic"){musicFile=null;musicInfo.innerHTML="";msg("Music काढले.")}};
 
 function mimeType(){
- return ["video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"].find(x=>MediaRecorder.isTypeSupported(x))||"";
+ return ["video/mp4;codecs=avc1.42E01E,mp4a.40.2","video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"].find(x=>MediaRecorder.isTypeSupported(x))||"";
 }
+function extFor(m){return m.startsWith("video/mp4")?"mp4":"webm"}
+window.transitionType="none";
 
 async function exportVideo(){
  if(!video.src||!video.duration){msg("Export साठी सध्या Video निवडा.",true);return}
@@ -107,7 +111,7 @@ async function exportVideo(){
  const rec=new MediaRecorder(stream,{mimeType,videoBitsPerSecond:6000000}),chunks=[];
  rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
  rec.onstop=()=>{
-   const blob=new Blob(chunks,{type:mime}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="AK-Video-"+Date.now()+".webm";a.click();
+   const blob=new Blob(chunks,{type:mime}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="AK-Video-"+Date.now()+"."+extFor(mime);a.click();
    if(audioCtx)audioCtx.close();if(musicEl)musicEl.pause();video.currentTime=oldTime;video.playbackRate=oldRate;msg("Export पूर्ण झाले ✅");
  };
  const start=Math.max(0,trimStart),end=Math.min(video.duration,trimEnd||video.duration);
