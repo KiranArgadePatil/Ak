@@ -105,8 +105,8 @@ window.transitionType="none";
 
 async function exportVideo(){
  if(!files.length){msg("आधी Photo / Video निवडा.",true);return}
- const videoFiles=files.filter(f=>f.type.startsWith("video/"));
- if(!videoFiles.length){msg("Export साठी किमान एक Video आवश्यक आहे.",true);return}
+ const mediaFiles=files.filter(f=>f.type.startsWith("video/")||f.type.startsWith("image/"));
+ if(!mediaFiles.length){msg("Export साठी Photo / Video निवडा.",true);return}
  const mime=mimeType();if(!mime){msg("या browser मध्ये Export समर्थित नाही.",true);return}
  const oldSrc=video.src,oldTime=video.currentTime,oldDisplay=video.style.display;
  const canvas=document.createElement("canvas");
