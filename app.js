@@ -73,6 +73,22 @@ function renderStickers(){
   overlay.appendChild(el);
  });
 }
+function drawStickerObjectsExport(ctx,canvas,c,time){
+ const arr=Array.isArray(c.stickers)?c.stickers:[];
+ arr.forEach(st=>{
+  const a=stickerAnimationState(Object.assign({},c,{stickerAnimation:st.animation||"none"}),time);
+  ctx.save();
+  ctx.globalAlpha=a.opacity;
+  ctx.translate((st.x==null?50:st.x)*canvas.width/100,(st.y==null?50:st.y)*canvas.height/100);
+  ctx.rotate(((st.rotation||0)+(a.rot||0))*Math.PI/180);
+  ctx.scale((st.scale||1)*a.scale,(st.scale||1)*a.scale);
+  ctx.font=Math.max(28,canvas.width*.055)+"px system-ui";
+  ctx.textAlign="center";
+  ctx.textBaseline="middle";
+  ctx.fillText(st.text,0,0);
+  ctx.restore();
+ });
+}
 function showStickerObjects(){
  const a=stickerList(),sel=a[a.length-1];
  tools.innerHTML='<b>🧩 Multiple Stickers</b><div class="sticker-grid"><button data-addsticker="⭐">⭐</button><button data-addsticker="❤️">❤️</button><button data-addsticker="🔥">🔥</button><button data-addsticker="✨">✨</button><button data-addsticker="😂">😂</button><button data-addsticker="🎉">🎉</button></div><label>Size <input id="stScale" type="range" min=".3" max="3" step=".05" value="'+(sel?sel.scale:1)+'"></label><label>Rotation <input id="stRotate" type="range" min="-180" max="180" value="'+(sel?sel.rotation:0)+'"></label><label>Animation <select id="stAnim"><option value="none">None</option><option value="fade">Fade</option><option value="pop">Pop</option><option value="zoom">Zoom</option><option value="slideUp">Slide Up</option><option value="slideDown">Slide Down</option><option value="spin">Spin</option></select></label><div class="hint">शेवटचा जोडलेला sticker निवडलेला आहे.</div>';
@@ -226,6 +242,7 @@ async function exportVideo(){
        const csNow=clipSettings[i]||settings();chromaCtx.clearRect(0,0,chromaCanvas.width,chromaCanvas.height);chromaCtx.filter=video.style.filter||"none";chromaCtx.drawImage(video,0,0,chromaCanvas.width,chromaCanvas.height);chromaCtx.filter="none";applyChromaCanvas(chromaCtx,chromaCanvas,csNow.chromaStrength);
        ctx.save();if(csNow.mask==="circle"){ctx.beginPath();ctx.arc(canvas.width/2,canvas.height/2,Math.min(canvas.width,canvas.height)*.46,0,Math.PI*2);ctx.clip()}else if(csNow.mask==="rect"){ctx.beginPath();ctx.roundRect(canvas.width*.05,canvas.height*.05,canvas.width*.9,canvas.height*.9,18);ctx.clip()}ctx.filter=video.style.filter||"none";ctx.translate(canvas.width/2,canvas.height/2);ctx.scale(zoom,zoom);ctx.drawImage(chromaCanvas,dx-canvas.width/2,dy-canvas.height/2,dw,dh);ctx.restore();ctx.filter="none";
        if(overlay.textContent){const tx=((csNow.textX??50)/100)*canvas.width,ty=((csNow.textY??16)/100)*canvas.height,sc=Number(csNow.textScale||1),rot=Number(csNow.textRotation||0),dur=Math.max(.2,Number(csNow.duration||photoDuration||5)),p=Math.max(0,Math.min(1,(video.currentTime-startTime)/dur)),ta=animationProgress(csNow.textAnimation||"none",Math.min(1,p/.35)),sa=stickerAnimationState(csNow,(video.currentTime-startTime));ctx.save();ctx.globalAlpha=ta.opacity*(csNow.sticker?sa.opacity:1);ctx.translate(tx+(sa.x*canvas.width),ty+(ta.y*canvas.height)+(sa.y*canvas.height));ctx.rotate((rot+(sa.rot||0))*Math.PI/180);ctx.scale(sc*ta.scale*(csNow.sticker?sa.scale:1),sc*ta.scale*(csNow.sticker?sa.scale:1));ctx.font=Math.max(textSize,canvas.width*.055)+"px system-ui";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.strokeStyle="#000";ctx.lineWidth=7;ctx.strokeText(overlay.textContent,0,0);ctx.fillText(overlay.textContent,0,0);ctx.restore()}
+       drawStickerObjectsExport(ctx,canvas,csNow,video.currentTime-startTime);
        if(video.currentTime>=endTime||video.ended){video.pause();resolve();return}
        requestAnimationFrame(draw)
      };requestAnimationFrame(draw)
