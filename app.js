@@ -43,7 +43,45 @@ function renderAudioTrimBlock(){const el=document.getElementById("audioTrack");i
 
 function applyAudioTimeline(){const a=audioTimelineState(),d=Number(a.end??999999);if(typeof musicFile!=="undefined"&&musicFile){const label=document.querySelector("#audioTrack .audio-clip-label");if(label)label.textContent="🎵 "+musicFile.name+" • "+Number(a.start||0).toFixed(1)+"s–"+(d===999999?"end":d.toFixed(1)+"s")+" • offset "+Number(a.offset||0).toFixed(1)+"s"}renderOverlayTracks();renderAudioWaveform()}
 function audioBeatMarkers(){const a=audioTimelineState();if(!Array.isArray(a.beats))a.beats=[];return a.beats}
-async function applyBeatCut(){if(!Array.isArray(files)||files.length<2){msg("किमान 2 media clips जोडा.",true);return}const a=audioTimelineState(),beats=audioBeatMarkers().filter(t=>t>=Number(a.start||0)&&(a.end==null||t<=Number(a.end)));if(beats.length<2){msg("आधी Auto Beat Detect करा.",true);return}const cutTimes=beats.map(t=>t-Number(a.start||0)+Number(a.offset||0)).filter(t=>t>0);let n=0;files.forEach((f,i)=>{if(i>=cutTimes.length)return;const cc=clipSettings[i]||(clipSettings[i]={});const dur=Number(cutTimes[i]-(i?cutTimes[i-1]:0));if(f.type&&f.type.startsWith("image/"))cc.duration=Math.max(.25,dur);else{cc.trimStart=Number(cc.trimStart||0);cc.trimEnd=Math.max(cc.trimStart+.2,cc.trimStart+dur)}n++});renderOverlayTracks();renderTransitionTracks();msg("✂️ Beat Cut लागू ✓ "+n+" clips");}
+async 
+function advancedEditorPack(){
+ const c=typeof settings==="function"?settings():{};
+ c.speedCurve=c.speedCurve||[{t:0,v:1},{t:.25,v:1},{t:.5,v:1},{t:.75,v:1},{t:1,v:1}];
+ c.textAnimPresets=c.textAnimPresets||["fade","pop","zoom","slideUp","bounce","spin"];
+ c.effectsPack=c.effectsPack||["none","fade","flash","shake","glitch","blur","zoom","vignette","cinematic"];
+ c.templatePresets=c.templatePresets||["Reel Beat","Cinematic","Vlog","Photo Story","Birthday","Status","Travel"];
+ c.exportProfile=c.exportProfile||{format:"webm",fps:30,quality:"high"};
+ msg("⚙️ Advanced editor pack तयार ✓");
+}
+function addProfessionalEffect(type){
+ const c=typeof settings==="function"?settings():{};
+ c.effect=type;
+ const map={flash:"brightness(1.35)",blur:"blur(2px)",vignette:"contrast(1.05) brightness(.92)",cinematic:"contrast(1.12) saturate(1.08)",glitch:"contrast(1.18) saturate(1.25)",shake:"none"};
+ const v=map[type]||"none";
+ if(typeof video!=="undefined"&&video.style)video.style.filter=v;
+ msg("✨ "+type+" effect लागू ✓");
+}
+function applyTemplatePreset(name){
+ const c=typeof settings==="function"?settings():{};
+ c.template=name;
+ if(name==="Reel Beat"){c.aspect="9:16";c.photoDuration=1.2}
+ else if(name==="Cinematic"){c.aspect="16:9";c.photoDuration=3}
+ else if(name==="Vlog"){c.aspect="16:9";c.photoDuration=2.5}
+ else if(name==="Photo Story"){c.aspect="9:16";c.photoDuration=2}
+ else {c.aspect="9:16";c.photoDuration=1.8}
+ msg("🎬 Template: "+name+" ✓");
+}
+function setSpeedCurvePreset(name){
+ const c=typeof settings==="function"?settings():{};
+ const p={normal:[1,1,1,1,1],montage:[1,1.5,.7,1.5,1],hero:[.5,.7,1,1.5,2],bullet:[1,2,2,2,1],smooth:[.8,1,1.2,1,0.8]};
+ c.speedCurvePreset=name;c.speedCurve=p[name]||p.normal;msg("⏩ Speed Curve: "+name+" ✓");
+}
+function prepareCaptionLayer(){
+ const c=typeof settings==="function"?settings():{};
+ c.captionStyle=c.captionStyle||{font:"Arial",size:34,color:"#ffffff",stroke:"#000000",shadow:true,position:"bottom"};
+ msg("📝 Caption style तयार ✓");
+}
+function applyBeatCut(){if(!Array.isArray(files)||files.length<2){msg("किमान 2 media clips जोडा.",true);return}const a=audioTimelineState(),beats=audioBeatMarkers().filter(t=>t>=Number(a.start||0)&&(a.end==null||t<=Number(a.end)));if(beats.length<2){msg("आधी Auto Beat Detect करा.",true);return}const cutTimes=beats.map(t=>t-Number(a.start||0)+Number(a.offset||0)).filter(t=>t>0);let n=0;files.forEach((f,i)=>{if(i>=cutTimes.length)return;const cc=clipSettings[i]||(clipSettings[i]={});const dur=Number(cutTimes[i]-(i?cutTimes[i-1]:0));if(f.type&&f.type.startsWith("image/"))cc.duration=Math.max(.25,dur);else{cc.trimStart=Number(cc.trimStart||0);cc.trimEnd=Math.max(cc.trimStart+.2,cc.trimStart+dur)}n++});renderOverlayTracks();renderTransitionTracks();msg("✂️ Beat Cut लागू ✓ "+n+" clips");}
 function beatSyncEffects(){if(!Array.isArray(files)||files.length<2){msg("किमान 2 media clips जोडा.",true);return}const beats=audioBeatMarkers();if(!beats.length){msg("आधी Auto Beat Detect करा.",true)}const a=audioTimelineState(),bs=beats.filter(t=>t>=Number(a.start||0)&&(a.end==null||t<=Number(a.end)));if(!bs.length)return;const targets=files.map((_,i)=>bs[i%bs.length]);let applied=0;files.forEach((f,i)=>{if(i===files.length-1)return;const cc=clipSettings[i]||(clipSettings[i]={}),t=targets[i];cc.transition={type:["fade","zoom","slide","glitch"][i%4],duration:.18};cc.speedCurve=cc.speedCurve||"smooth";const k0={clip:i,time:Number(cc.trimStart||0),zoom:1,rotation:0,opacity:1,x:0,y:0},k1={clip:i,time:Number(cc.trimEnd??(f.type.startsWith("image/")?Number(cc.duration||photoDuration||3):Number(video.duration||3))),zoom:i%2?1.08:1.18,rotation:i%3===0?1:0,opacity:1,x:i%2?1:-1,y:0};keyframes=Array.isArray(keyframes)?keyframes:keyframes||[];keyframes=keyframes.filter(k=>k.clip!==i);keyframes.push(k0,k1);applied++});renderTransitionTracks();renderKeyframeTracks();msg("🎬 Beat Effects लागू ✓ "+applied+" clips");}
 function autoBeatSync(){if(!Array.isArray(files)||!files.length){msg("आधी Photo/Video जोडा.",true);return}const a=audioTimelineState(),beats=audioBeatMarkers();if(!beats.length){msg("आधी Auto Beat Detect करा.",true);return}const total=files.length;const usable=beats.filter(t=>Number(t)>=Number(a.start||0)&&Number(t)<=(a.end==null?Infinity:Number(a.end)));if(!usable.length){msg("या audio range मध्ये beat नाही.",true);return}const c=settings();const base=usable.slice(0,Math.max(1,total+1));let changed=0;files.forEach((f,i)=>{if(!clipSettings[i])clipSettings[i]={};const cc=clipSettings[i];const st=(i===currentIndex&&typeof settings==="function")?settings():cc;const start=i===0?0:(base[Math.min(i,base.length-1)]||0);const next=base[i+1];if(f.type&&f.type.startsWith("image/")){cc.duration=Math.max(.25,(next!=null?next-start:(base[base.length-1]-start)||Number(photoDuration||3)));changed++}else if(Number.isFinite(next)&&next>start){cc.trimStart=0;cc.trimEnd=next-start;changed++}});renderOverlayTracks();renderTransitionTracks();msg("⚡ Beat Sync लागू ✓ "+changed+" clips");}
 function detectAudioBeats(){if(typeof musicFile==="undefined"||!musicFile){msg("आधी Audio जोडा.",true);return}try{const C=window.AudioContext||window.webkitAudioContext;if(!C)return;msg("Audio beats शोधत आहे…");const ctx=new C(),buf=await ctx.decodeAudioData(await musicFile.arrayBuffer()),data=buf.getChannelData(0),rate=buf.sampleRate,win=Math.floor(rate*.05),hop=Math.floor(rate*.025),energy=[];for(let i=0;i+win<data.length;i+=hop){let sum=0;for(let j=0;j<win;j+=8){const v=data[i+j]||0;sum+=v*v}energy.push(Math.sqrt(sum/Math.max(1,Math.floor(win/8))))}const beats=[],avg=energy.reduce((a,b)=>a+b,0)/Math.max(1,energy.length);for(let i=2;i<energy.length-2;i++){const e=energy[i],thr=avg*1.45;if(e>thr&&e>=energy[i-1]&&e>=energy[i+1]){const t=i*hop/rate;if(!beats.length||t-beats[beats.length-1]>.28)beats.push(t)}}const a=audioTimelineState();a.beats=beats.slice(0,300);try{ctx.close()}catch(e){}renderAudioBeats();msg(beats.length+" beat markers सापडले ✓")}catch(e){console.warn(e);msg("Beat detection failed",true)}}
