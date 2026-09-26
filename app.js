@@ -19,7 +19,7 @@ function load(f){
    preview.style.backgroundImage="";
    video.src=URL.createObjectURL(f);video.style.display="block";empty.style.display="none";
    trimStart=0;trimEnd=0;
-   video.onloadedmetadata=()=>{trimEnd=video.duration;renderTimeline()};
+   video.addEventListener("timeupdate",applyKeyframeState);\nvideo.onloadedmetadata=()=>{trimEnd=video.duration;renderTimeline()};
  }
  renderTimeline();
 }
