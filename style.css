@@ -3,3 +3,4 @@
 .sticker-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:8px}.sticker-grid button{font-size:28px;padding:8px}.home-screen[hidden],.editor-screen[hidden]{display:none!important}
 
 .track-item{touch-action:none;user-select:none}.track-row>div{overflow-x:auto;overflow-y:hidden;white-space:nowrap}.track-item{display:block;box-sizing:border-box}
+.transition-marker{position:absolute;top:50%;transform:translate(-50%,-50%);z-index:5;background:#303746;border:1px solid #596274;border-radius:12px;padding:3px 7px;font-size:9px;color:#dce2ef;white-space:nowrap;pointer-events:none}
