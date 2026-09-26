@@ -34,6 +34,25 @@ function animationProgress(type,p){
  if(type==="bounce")return {opacity:1,scale:1+.08*Math.sin(p*Math.PI*4)*(1-p),y:0};
  return {opacity:1,scale:1,y:0};
 }
+function stickerAnimationState(c,time){
+ const type=c.stickerAnimation||"none",d=Math.max(.2,Number(c.duration||photoDuration||5)),p=Math.max(0,Math.min(1,time/d)),q=Math.min(1,p/.35);
+ if(type==="fade")return {opacity:q,scale:1,x:0,y:0};
+ if(type==="pop")return {opacity:q,scale:.65+.35*q,x:0,y:0};
+ if(type==="zoom")return {opacity:q,scale:.55+.45*q,x:0,y:0};
+ if(type==="slideUp")return {opacity:q,scale:1,x:0,y:(1-q)*.2};
+ if(type==="slideDown")return {opacity:q,scale:1,x:0,y:-(1-q)*.2};
+ if(type==="spin")return {opacity:q,scale:1,x:0,y:0,rot:(1-q)*180};
+ return {opacity:1,scale:1,x:0,y:0,rot:0};
+}
+function applyStickerAnimationPreview(){
+ if(!overlay||!settings().sticker)return;
+ const c=settings(),a=stickerAnimationState(c,video.currentTime||0);
+ overlay.style.opacity=a.opacity;
+ overlay.style.transform="translate(-50%,-50%) translate("+(a.x*100)+"%,"+(a.y*100)+"%) scale("+(Number(c.textScale||1)*a.scale)+") rotate("+(Number(c.textRotation||0)+(a.rot||0))+"deg)";
+}
+function showStickerAnimation(){
+ tools.innerHTML='<b>✨ Sticker Animation</b><button data-stickeranim="none">None</button><button data-stickeranim="fade">Fade</button><button data-stickeranim="pop">Pop</button><button data-stickeranim="zoom">Zoom</button><button data-stickeranim="slideUp">Slide Up</button><button data-stickeranim="slideDown">Slide Down</button><button data-stickeranim="spin">Spin</button>';
+}
 function applyTextAnimationPreview(){
  if(!overlay)return;
  const c=settings(),type=c.textAnimation||"none";
@@ -65,7 +84,7 @@ function applyVisualSettings(){
  video.style.transform="scale("+(c.zoom||1)+") rotate("+(c.rotation||0)+"deg)"+(c.mirror?" scaleX(-1)":"");
 }
 tools.onclick=e=>{\n const t=e.target; if(t.dataset.chroma){settings().chroma=t.dataset.chroma==="on";msg("Chroma Key "+(settings().chroma?"ON":"OFF")+" ✓")}  if(t.dataset.effect){settings().effect=t.dataset.effect;applyEffectPreview();msg("Effect: "+t.dataset.effect+" ✓")} if(t.dataset.mask){settings().mask=t.dataset.mask;applyMaskPreview();msg("Mask: "+t.dataset.mask+" ✓")}  if(t.id==="applyExport"){exportConfig.width=$("#exQuality").value==="720"?720:1080;exportConfig.height=exportConfig.width===720?405:608;exportConfig.fps=+$("#exFps").value;exportConfig.bitrate=+$("#exBitrate").value;msg("Export settings लागू झाले ✓");} if(t.id==="addKeyframe"){keyframes.push({clip:currentIndex,time:video.currentTime,zoom:settings().zoom,rotation:settings().rotation,opacity:settings().opacity});$("#kfList").textContent="Keyframes: "+keyframes.filter(k=>k.clip===currentIndex).length;msg("Keyframe जोडला ✓")} if(t.dataset.sticker){settings().sticker=t.dataset.sticker;overlay.textContent=(overlay.textContent||"")+" "+t.dataset.sticker;renderOverlayTracks();msg("Sticker जोडला ✓")} if(t.dataset.textanim){settings().textAnimation=t.dataset.textanim;msg("Text animation: "+t.dataset.textanim+" ✓")} if(t.dataset.mask){settings().mask=t.dataset.mask;applyMaskPreview();msg("Mask: "+t.dataset.mask+" ✓")} if(t.id==="clearSticker"){overlay.textContent="";msg("Sticker clear ✓")} if(t.id==="captionStart"){if(!("webkitSpeechRecognition" in window||"SpeechRecognition" in window)){msg("या browser मध्ये Speech Recognition उपलब्ध नाही.",true)}else{const R=window.SpeechRecognition||window.webkitSpeechRecognition,r=new R();r.lang="mr-IN";r.continuous=true;r.onresult=e=>{let x="";for(let i=e.resultIndex;i<e.results.length;i++)x+=e.results[i][0].transcript+" ";overlay.textContent=x.trim();settings().text=x.trim()};r.start();msg("Auto Caption सुरू ✓")}} if(t.id==="clearKeyframes"){for(let i=keyframes.length-1;i>=0;i--)if(keyframes[i].clip===currentIndex)keyframes.splice(i,1);$("#kfList").textContent="Keyframes: 0";msg("Keyframes clear ✓")}
- const t=e.target; if(t.id==="speedCustom"){settings().speed=+t.value;video.playbackRate=+t.value;$("#speedVal").textContent=t.value+"×"} if(t.id==="adjB"){settings().brightness=+t.value;applyVisualSettings()} if(t.id==="adjC"){settings().contrast=+t.value;applyVisualSettings()} if(t.id==="adjS"){settings().saturation=+t.value;applyVisualSettings()} if(t.id==="adjH"){settings().hue=+t.value;applyVisualSettings()} if(t.id==="adjL"){settings().lightness=+t.value;applyVisualSettings()} if(t.id==="adjBlur"){settings().blur=+t.value;applyVisualSettings()}
+ if(t.dataset.stickeranim){settings().stickerAnimation=t.dataset.stickeranim;applyStickerAnimationPreview();msg("Sticker Animation: "+t.textContent+" ✓");return} const t=e.target; if(t.id==="speedCustom"){settings().speed=+t.value;video.playbackRate=+t.value;$("#speedVal").textContent=t.value+"×"} if(t.id==="adjB"){settings().brightness=+t.value;applyVisualSettings()} if(t.id==="adjC"){settings().contrast=+t.value;applyVisualSettings()} if(t.id==="adjS"){settings().saturation=+t.value;applyVisualSettings()} if(t.id==="adjH"){settings().hue=+t.value;applyVisualSettings()} if(t.id==="adjL"){settings().lightness=+t.value;applyVisualSettings()} if(t.id==="adjBlur"){settings().blur=+t.value;applyVisualSettings()}
  if(t.dataset.v && video.src){playbackSpeed=+t.dataset.v;settings().speed=playbackSpeed;video.playbackRate=playbackSpeed;msg("Speed: "+playbackSpeed+"×")} if(t.dataset.curve){settings().speedCurve=t.dataset.curve==="none"?null:t.dataset.curve;msg("Speed Curve: "+(t.dataset.curve==="none"?"Normal":t.dataset.curve)+" ✓");}
  if(t.dataset.f!==undefined && video.src){video.style.filter=t.dataset.f;settings().filter=t.dataset.f;}
  if(t.dataset.t){window.transitionType=t.dataset.t;settings().transition=t.dataset.t;msg("Transition: "+t.dataset.t)}
@@ -169,7 +188,7 @@ async function exportVideo(){
        if(src>dst){dh=canvas.height;dw=dh*src;dx=(canvas.width-dw)/2}else{dw=canvas.width;dh=dw/src;dy=(canvas.height-dh)/2}
        const csNow=clipSettings[i]||settings();chromaCtx.clearRect(0,0,chromaCanvas.width,chromaCanvas.height);chromaCtx.filter=video.style.filter||"none";chromaCtx.drawImage(video,0,0,chromaCanvas.width,chromaCanvas.height);chromaCtx.filter="none";applyChromaCanvas(chromaCtx,chromaCanvas,csNow.chromaStrength);
        ctx.save();if(csNow.mask==="circle"){ctx.beginPath();ctx.arc(canvas.width/2,canvas.height/2,Math.min(canvas.width,canvas.height)*.46,0,Math.PI*2);ctx.clip()}else if(csNow.mask==="rect"){ctx.beginPath();ctx.roundRect(canvas.width*.05,canvas.height*.05,canvas.width*.9,canvas.height*.9,18);ctx.clip()}ctx.filter=video.style.filter||"none";ctx.translate(canvas.width/2,canvas.height/2);ctx.scale(zoom,zoom);ctx.drawImage(chromaCanvas,dx-canvas.width/2,dy-canvas.height/2,dw,dh);ctx.restore();ctx.filter="none";
-       if(overlay.textContent){const tx=((csNow.textX??50)/100)*canvas.width,ty=((csNow.textY??16)/100)*canvas.height,sc=Number(csNow.textScale||1),rot=Number(csNow.textRotation||0),dur=Math.max(.2,Number(csNow.duration||photoDuration||5)),p=Math.max(0,Math.min(1,(video.currentTime-startTime)/dur)),a=animationProgress(csNow.textAnimation||"none",Math.min(1,p/.35));ctx.save();ctx.globalAlpha=a.opacity;ctx.translate(tx,ty+(a.y*canvas.height));ctx.rotate(rot*Math.PI/180);ctx.scale(sc*a.scale,sc*a.scale);ctx.font=Math.max(textSize,canvas.width*.055)+"px system-ui";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.strokeStyle="#000";ctx.lineWidth=7;ctx.strokeText(overlay.textContent,0,0);ctx.fillText(overlay.textContent,0,0);ctx.restore()}
+       if(overlay.textContent){const tx=((csNow.textX??50)/100)*canvas.width,ty=((csNow.textY??16)/100)*canvas.height,sc=Number(csNow.textScale||1),rot=Number(csNow.textRotation||0),dur=Math.max(.2,Number(csNow.duration||photoDuration||5)),p=Math.max(0,Math.min(1,(video.currentTime-startTime)/dur)),ta=animationProgress(csNow.textAnimation||"none",Math.min(1,p/.35)),sa=stickerAnimationState(csNow,(video.currentTime-startTime));ctx.save();ctx.globalAlpha=ta.opacity*(csNow.sticker?sa.opacity:1);ctx.translate(tx+(sa.x*canvas.width),ty+(ta.y*canvas.height)+(sa.y*canvas.height));ctx.rotate((rot+(sa.rot||0))*Math.PI/180);ctx.scale(sc*ta.scale*(csNow.sticker?sa.scale:1),sc*ta.scale*(csNow.sticker?sa.scale:1));ctx.font=Math.max(textSize,canvas.width*.055)+"px system-ui";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.strokeStyle="#000";ctx.lineWidth=7;ctx.strokeText(overlay.textContent,0,0);ctx.fillText(overlay.textContent,0,0);ctx.restore()}
        if(video.currentTime>=endTime||video.ended){video.pause();resolve();return}
        requestAnimationFrame(draw)
      };requestAnimationFrame(draw)
