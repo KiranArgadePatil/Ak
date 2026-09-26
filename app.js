@@ -76,11 +76,18 @@ function renderStickers(){
 function renderKeyframeTracks(){
  const lane=document.querySelector("#timeline");if(!lane)return;
  document.querySelectorAll(".keyframe-marker").forEach(x=>x.remove());
- const pxPerSec=32;
- keyframes.filter(k=>k.clip===currentIndex).forEach((k,n)=>{
-  const x=document.createElement("div");x.className="keyframe-marker";x.dataset.kfIndex=n;x.style.left=(Math.max(0,k.time)*pxPerSec)+"px";x.textContent="♦";x.title="Keyframe "+(n+1)+" • "+fmt(k.time);x.style.pointerEvents="auto";x.style.touchAction="none";
-  x.onpointerdown=e=>{e.stopPropagation();x.setPointerCapture(e.pointerId);const sx=e.clientX,st=k.time;
-   x.onpointermove=m=>{k.time=Math.max(0,Math.round((st+(m.clientX-sx)/pxPerSec)*10)/10);x.style.left=(k.time*pxPerSec)+"px";x.title="Keyframe "+(n+1)+" • "+fmt(k.time);try{if(files[currentIndex]&&!files[currentIndex].type.startsWith("image/")&&Number.isFinite(video.duration)){const c=clipSettings[currentIndex]||{};const lo=Number(c.trimStart||0),hi=Number(c.trimEnd??video.duration);video.currentTime=Math.max(lo,Math.min(hi,k.time));}applyKeyframePreview(k.time)}catch(_){}};
+ const pxPerSec=32, isImage=files[currentIndex]&&files[currentIndex].type.startsWith("image/"), c=clipSettings[currentIndex]||{};
+ const clipStart=files.slice(0,currentIndex).reduce((a,_,k)=>a+Math.max(.1,(clipSettings[k]||{}).duration||photoDuration||5),0);
+ const trimStart=Number(c.trimStart||0), clipDur=isImage?Number(c.duration||photoDuration||5):Math.max(.1,Number(c.trimEnd??video.duration)-trimStart);
+ keyframes.filter(k=>k.clip===currentIndex).sort((a,b)=>a.time-b.time).forEach((k,n)=>{
+  const localTime=isImage?Number(k.time||0):Number(k.time||0)-trimStart;
+  const x=document.createElement("div");x.className="keyframe-marker";x.dataset.kfIndex=n;
+  x.style.left=((clipStart+Math.max(0,Math.min(clipDur,localTime)))*pxPerSec)+"px";
+  x.title="Keyframe "+(n+1)+" • "+fmt(Math.max(0,localTime));x.style.pointerEvents="auto";x.style.touchAction="none";
+  x.onpointerdown=e=>{e.stopPropagation();x.setPointerCapture(e.pointerId);const sx=e.clientX,st=localTime;
+   x.onpointermove=m=>{const next=Math.max(0,Math.min(clipDur,Math.round((st+(m.clientX-sx)/pxPerSec)*10)/10));k.time=isImage?next:trimStart+next;
+    x.style.left=((clipStart+next)*pxPerSec)+"px";x.title="Keyframe "+(n+1)+" • "+fmt(next);
+    try{if(!isImage&&Number.isFinite(video.duration))video.currentTime=Math.max(trimStart,Math.min(Number(c.trimEnd??video.duration),k.time));applyKeyframePreview(isImage?next:k.time)}catch(_){}};
    x.onpointerup=x.onpointercancel=()=>{x.onpointermove=null;x.onpointerup=null;x.onpointercancel=null;keyframes.sort((a,b)=>a.clip-b.clip||a.time-b.time);renderKeyframeTracks();msg("Keyframe वेळ बदलली ✓")};
   };
   lane.appendChild(x);
