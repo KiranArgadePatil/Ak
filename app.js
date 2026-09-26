@@ -44,6 +44,38 @@ function stickerAnimationState(c,time){
  if(type==="spin")return {opacity:q,scale:1,x:0,y:0,rot:(1-q)*180};
  return {opacity:1,scale:1,x:0,y:0,rot:0};
 }
+function stickerList(){
+ const c=settings();if(!Array.isArray(c.stickers))c.stickers=[];
+ return c.stickers;
+}
+function addSticker(char){
+ const c=settings(),a=stickerList();
+ const id="st_"+Date.now()+"_"+Math.random().toString(36).slice(2,6);
+ a.push({id:id,text:char,x:50,y:50,scale:1,rotation:0,animation:"none"});
+ c.sticker=id;renderStickers();return id;
+}
+function renderStickers(){
+ if(!overlay)return;
+ const a=stickerList();overlay.innerHTML="";
+ a.forEach(st=>{
+  const el=document.createElement("div");
+  el.textContent=st.text;el.dataset.stickerId=st.id;el.style.position="absolute";
+  el.style.left=(st.x==null?50:st.x)+"%";el.style.top=(st.y==null?50:st.y)+"%";
+  el.style.transform="translate(-50%,-50%) scale("+(st.scale||1)+") rotate("+(st.rotation||0)+"deg)";
+  el.style.fontSize=Math.max(28,textSize)+"px";el.style.cursor="grab";el.style.touchAction="none";
+  el.onpointerdown=function(ev){
+   ev.stopPropagation();el.setPointerCapture(ev.pointerId);
+   const r=preview.getBoundingClientRect(),sx=ev.clientX,sy=ev.clientY,ox=st.x==null?50:st.x,oy=st.y==null?50:st.y;
+   el.onpointermove=function(m){st.x=Math.max(0,Math.min(100,ox+(m.clientX-sx)/r.width*100));st.y=Math.max(0,Math.min(100,oy+(m.clientY-sy)/r.height*100));el.style.left=st.x+"%";el.style.top=st.y+"%"};
+   el.onpointerup=el.onpointercancel=function(){el.onpointermove=null;el.onpointerup=null;el.onpointercancel=null};
+  };
+  el.ondblclick=function(){st.rotation=(st.rotation+15)%360;el.style.transform="translate(-50%,-50%) scale("+(st.scale||1)+") rotate("+(st.rotation||0)+"deg)"};
+  overlay.appendChild(el);
+ });
+}
+function showStickerObjects(){
+ tools.innerHTML='<b>🧩 Multiple Stickers</b><div class="sticker-grid"><button data-addsticker="⭐">⭐</button><button data-addsticker="❤️">❤️</button><button data-addsticker="🔥">🔥</button><button data-addsticker="✨">✨</button><button data-addsticker="😂">😂</button><button data-addsticker="🎉">🎉</button></div><div class="hint">Sticker drag करा • Double tap = rotate</div>';
+}
 function applyStickerAnimationPreview(){
  if(!overlay||!settings().sticker)return;
  const c=settings(),a=stickerAnimationState(c,video.currentTime||0);
@@ -84,7 +116,7 @@ function applyVisualSettings(){
  video.style.transform="scale("+(c.zoom||1)+") rotate("+(c.rotation||0)+"deg)"+(c.mirror?" scaleX(-1)":"");
 }
 tools.onclick=e=>{\n const t=e.target; if(t.dataset.chroma){settings().chroma=t.dataset.chroma==="on";msg("Chroma Key "+(settings().chroma?"ON":"OFF")+" ✓")}  if(t.dataset.effect){settings().effect=t.dataset.effect;applyEffectPreview();msg("Effect: "+t.dataset.effect+" ✓")} if(t.dataset.mask){settings().mask=t.dataset.mask;applyMaskPreview();msg("Mask: "+t.dataset.mask+" ✓")}  if(t.id==="applyExport"){exportConfig.width=$("#exQuality").value==="720"?720:1080;exportConfig.height=exportConfig.width===720?405:608;exportConfig.fps=+$("#exFps").value;exportConfig.bitrate=+$("#exBitrate").value;msg("Export settings लागू झाले ✓");} if(t.id==="addKeyframe"){keyframes.push({clip:currentIndex,time:video.currentTime,zoom:settings().zoom,rotation:settings().rotation,opacity:settings().opacity});$("#kfList").textContent="Keyframes: "+keyframes.filter(k=>k.clip===currentIndex).length;msg("Keyframe जोडला ✓")} if(t.dataset.sticker){settings().sticker=t.dataset.sticker;overlay.textContent=(overlay.textContent||"")+" "+t.dataset.sticker;renderOverlayTracks();msg("Sticker जोडला ✓")} if(t.dataset.textanim){settings().textAnimation=t.dataset.textanim;msg("Text animation: "+t.dataset.textanim+" ✓")} if(t.dataset.mask){settings().mask=t.dataset.mask;applyMaskPreview();msg("Mask: "+t.dataset.mask+" ✓")} if(t.id==="clearSticker"){overlay.textContent="";msg("Sticker clear ✓")} if(t.id==="captionStart"){if(!("webkitSpeechRecognition" in window||"SpeechRecognition" in window)){msg("या browser मध्ये Speech Recognition उपलब्ध नाही.",true)}else{const R=window.SpeechRecognition||window.webkitSpeechRecognition,r=new R();r.lang="mr-IN";r.continuous=true;r.onresult=e=>{let x="";for(let i=e.resultIndex;i<e.results.length;i++)x+=e.results[i][0].transcript+" ";overlay.textContent=x.trim();settings().text=x.trim()};r.start();msg("Auto Caption सुरू ✓")}} if(t.id==="clearKeyframes"){for(let i=keyframes.length-1;i>=0;i--)if(keyframes[i].clip===currentIndex)keyframes.splice(i,1);$("#kfList").textContent="Keyframes: 0";msg("Keyframes clear ✓")}
- if(t.dataset.stickeranim){settings().stickerAnimation=t.dataset.stickeranim;applyStickerAnimationPreview();msg("Sticker Animation: "+t.textContent+" ✓");return} const t=e.target; if(t.id==="speedCustom"){settings().speed=+t.value;video.playbackRate=+t.value;$("#speedVal").textContent=t.value+"×"} if(t.id==="adjB"){settings().brightness=+t.value;applyVisualSettings()} if(t.id==="adjC"){settings().contrast=+t.value;applyVisualSettings()} if(t.id==="adjS"){settings().saturation=+t.value;applyVisualSettings()} if(t.id==="adjH"){settings().hue=+t.value;applyVisualSettings()} if(t.id==="adjL"){settings().lightness=+t.value;applyVisualSettings()} if(t.id==="adjBlur"){settings().blur=+t.value;applyVisualSettings()}
+ if(t.dataset.addsticker){addSticker(t.dataset.addsticker);msg("Sticker added ✓");return} if(t.dataset.stickeranim){settings().stickerAnimation=t.dataset.stickeranim;applyStickerAnimationPreview();msg("Sticker Animation: "+t.textContent+" ✓");return} const t=e.target; if(t.id==="speedCustom"){settings().speed=+t.value;video.playbackRate=+t.value;$("#speedVal").textContent=t.value+"×"} if(t.id==="adjB"){settings().brightness=+t.value;applyVisualSettings()} if(t.id==="adjC"){settings().contrast=+t.value;applyVisualSettings()} if(t.id==="adjS"){settings().saturation=+t.value;applyVisualSettings()} if(t.id==="adjH"){settings().hue=+t.value;applyVisualSettings()} if(t.id==="adjL"){settings().lightness=+t.value;applyVisualSettings()} if(t.id==="adjBlur"){settings().blur=+t.value;applyVisualSettings()}
  if(t.dataset.v && video.src){playbackSpeed=+t.dataset.v;settings().speed=playbackSpeed;video.playbackRate=playbackSpeed;msg("Speed: "+playbackSpeed+"×")} if(t.dataset.curve){settings().speedCurve=t.dataset.curve==="none"?null:t.dataset.curve;msg("Speed Curve: "+(t.dataset.curve==="none"?"Normal":t.dataset.curve)+" ✓");}
  if(t.dataset.f!==undefined && video.src){video.style.filter=t.dataset.f;settings().filter=t.dataset.f;}
  if(t.dataset.t){window.transitionType=t.dataset.t;settings().transition=t.dataset.t;msg("Transition: "+t.dataset.t)}
