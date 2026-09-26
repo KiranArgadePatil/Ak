@@ -1,11 +1,13 @@
 const $=s=>document.querySelector(s);
 const video=$("#video"),empty=$("#empty"),media=$("#media"),timeline=$("#timeline"),tools=$("#tools"),overlay=$("#overlay"),preview=$("#preview"),musicInfo=$("#musicInfo"),status=$("#status");
 let files=[],musicFile=null,trimStart=0,trimEnd=0,ratio="original",splitPoints=[],currentIndex=0,currentImage=null,textSize=30,textY=16,zoom=1,photoDuration=5,musicFadeIn=0,musicFadeOut=0;
+const clipSettings=[];
+const settings=()=>clipSettings[currentIndex]||(clipSettings[currentIndex]={duration:photoDuration,text:"",filter:"none",zoom:1,transition:"none"});
 
 const fmt=s=>!isFinite(s)?"0:00":Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0");
 const msg=(t,e=false)=>{status.textContent=t;status.style.color=e?"#ff879a":"#9fe3ad"};
 
-media.onchange=e=>{files=[...e.target.files];currentIndex=0;splitPoints=[];load(files[0]);renderTimeline()};
+media.onchange=e=>{files=[...e.target.files];currentIndex=0;splitPoints=[];files.forEach((_,i)=>clipSettings[i]|| (clipSettings[i]={duration:photoDuration,text:"",filter:"none",zoom:1,transition:"none"}));load(files[0]);renderTimeline()};
 
 function load(f){
  currentImage=null;
@@ -51,23 +53,24 @@ function act(a){
  if(a==="ratio")tools.innerHTML='<b>Ratio</b><button data-r="original">Original</button><button data-r="9:16">9:16 Reel</button><button data-r="1:1">1:1</button><button data-r="16:9">16:9</button>';
  if(a==="text")tools.innerHTML='<input id="txt" placeholder="Marathi / English Text लिहा"><label>Size <input id="fontSize" type="range" min="16" max="80" value="30"></label><label>Position <input id="textY" type="range" min="5" max="90" value="16"></label><button id="add">Add</button><button id="clearText">Clear</button>';
  if(a==="speed")tools.innerHTML='<button data-v=".5">0.5×</button><button data-v="1">1×</button><button data-v="1.5">1.5×</button><button data-v="2">2×</button>';
- if(a==="zoom")tools.innerHTML='<b>🔍 Zoom</b><input id="zoom" type="range" min="1" max="2.5" step=".1" value="1"><div class="hint">Preview मध्ये Zoom करा.</div>';
+ if(a==="zoom")tools.innerHTML='<b>🔍 Zoom</b><input id="zoom" type="range" min="1" max="2.5" step=".1" value="'+settings().zoom+'"><div class="hint">Preview मध्ये Zoom करा.</div>';
  if(a==="filter")tools.innerHTML='<button data-f="none">Original</button><button data-f="grayscale(1)">B&W</button><button data-f="sepia(1)">Sepia</button><button data-f="contrast(1.4) saturate(1.3)">Vivid</button>';
+ if(a==="clipSettings")tools.innerHTML='<b>🎬 Clip Settings</b><label>Photo/Clip Duration <input id="clipDur" type="range" min="1" max="15" step=".5" value="'+settings().duration+'"></label><span id="clipDurVal">'+settings().duration+' sec</span><label>Transition <select id="clipTrans"><option value="none">None</option><option value="fade">Fade</option><option value="flash">Flash</option></select></label>';
  if(a==="photoDuration")tools.innerHTML='<b>🖼️ Photo Duration</b><input id="photoDur" type="range" min="1" max="15" step=".5" value="'+photoDuration+'"><span id="photoDurVal">'+photoDuration+' sec</span>';
  if(a==="musicFade")tools.innerHTML='<b>🎵 Music Fade</b><label>Fade In <input id="fadeIn" type="range" min="0" max="5" step=".5" value="'+musicFadeIn+'"></label><label>Fade Out <input id="fadeOut" type="range" min="0" max="5" step=".5" value="'+musicFadeOut+'"></label>';
  if(a==="volume")tools.innerHTML='<span>Video</span><input id="vol" type="range" min="0" max="1" step=".05" value="'+video.volume+'">';
- if(a==="transition")tools.innerHTML='<b>🎞️ Transition</b><button data-t="none">None</button><button data-t="fade">Fade</button><button data-t="flash">Flash</button><div class="hint">Clip बदलताना transition निवडा.</div>';
+ if(a==="clipSettings"){}\n if(a==="transition")tools.innerHTML='<b>🎞️ Transition</b><button data-t="none">None</button><button data-t="fade">Fade</button><button data-t="flash">Flash</button><div class="hint">Clip बदलताना transition निवडा.</div>';
 }
 
 tools.onclick=e=>{
  const t=e.target;
  if(t.dataset.v && video.src)video.playbackRate=+t.dataset.v;
- if(t.dataset.f!==undefined && video.src)video.style.filter=t.dataset.f;
- if(t.dataset.t){window.transitionType=t.dataset.t;msg("Transition: "+t.dataset.t)}
+ if(t.dataset.f!==undefined && video.src){video.style.filter=t.dataset.f;settings().filter=t.dataset.f;}
+ if(t.dataset.t){window.transitionType=t.dataset.t;settings().transition=t.dataset.t;msg("Transition: "+t.dataset.t)}
  if(t.id==="zoom"){zoom=+t.value;video.style.transform="scale("+zoom+")";msg("Zoom: "+zoom+"×")}
  if(t.dataset.r){ratio=t.dataset.r;preview.classList.toggle("video-916",ratio==="9:16");preview.classList.toggle("ratio-square",ratio==="1:1");preview.classList.toggle("ratio-wide",ratio==="16:9");msg("Ratio: "+ratio)}
- if(t.id==="add")overlay.textContent=$("#txt").value;
- if(t.id==="clearText")overlay.textContent="";
+ if(t.id==="add"){overlay.textContent=$("#txt").value;settings().text=$("#txt").value;}
+ if(t.id==="clearText"){overlay.textContent="";settings().text="";}
  if(t.id==="applyTrim"){
    const s=parseFloat($("#ts").value),en=parseFloat($("#te").value);
    if(s>=0&&en>s&&en<=(currentImage?5:video.duration)){trimStart=s;trimEnd=en;if(video.src)video.currentTime=s;renderTimeline();msg("Trim सेट: "+fmt(s)+" → "+fmt(en))}
@@ -89,6 +92,8 @@ tools.oninput=e=>{
  if(e.target.id==="photoDur"){photoDuration=+e.target.value;$("#photoDurVal").textContent=photoDuration+" sec";renderTimeline()}
  if(e.target.id==="fadeIn")musicFadeIn=+e.target.value;
  if(e.target.id==="fadeOut")musicFadeOut=+e.target.value;
+ if(e.target.id==="clipDur"){settings().duration=+e.target.value;$("#clipDurVal").textContent=settings().duration+" sec";renderTimeline()}
+ if(e.target.id==="clipTrans"){settings().transition=e.target.value;}
 };
 
 $("#music").onchange=e=>{
