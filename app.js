@@ -114,7 +114,21 @@ function renderOverlayTracks(){
 function bindOverlayPreviewDrag(){
  if(!overlay)return;
  overlay.style.touchAction="none";
- overlay.onpointerdown=e=>{if(!overlay.textContent)return;overlay.setPointerCapture(e.pointerId);const sx=e.clientX,sy=e.clientY,ox=textY,oy=textSize;const move=ev=>{textY=Math.max(0,Math.min(90,oy+(ev.clientY-sy)/4));overlay.style.top=textY+"%";overlay.style.left=Math.max(5,Math.min(95,50+(ev.clientX-sx)/4))+"%"};const up=()=>{overlay.onpointermove=null};overlay.onpointermove=move;overlay.onpointerup=up;overlay.onpointercancel=up};
+ overlay.onpointerdown=e=>{
+  if(!overlay.textContent)return;
+  overlay.setPointerCapture(e.pointerId);
+  const rect=preview.getBoundingClientRect(), sx=e.clientX, sy=e.clientY;
+  const startX=parseFloat(overlay.style.left)||50, startY=parseFloat(overlay.style.top)||textY;
+  const move=ev=>{
+   const nx=Math.max(0,Math.min(100,startX+(ev.clientX-sx)/rect.width*100));
+   const ny=Math.max(0,Math.min(100,startY+(ev.clientY-sy)/rect.height*100));
+   overlay.style.left=nx+"%"; overlay.style.top=ny+"%"; textY=ny;
+   const c=settings(); c.textX=nx; c.textY=ny;
+   renderOverlayTracks();
+  };
+  const up=ev=>{try{overlay.releasePointerCapture(ev.pointerId)}catch(_){} overlay.onpointermove=null;overlay.onpointerup=null;overlay.onpointercancel=null;saveState&&saveState()};
+  overlay.onpointermove=move; overlay.onpointerup=up; overlay.onpointercancel=up;
+ };
 }
 
 function renderTimeline(){
