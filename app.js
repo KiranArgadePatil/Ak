@@ -49,6 +49,16 @@ let exportConfig={width:1280,height:720,fps:30,bitrate:6000000};
 function openExportSettings(){
  tools.innerHTML='<b>⚙️ Export Settings</b><label>Quality <select id="exQuality"><option value="720">720p</option><option value="1080" selected>1080p</option></select></label><label>FPS <select id="exFps"><option>24</option><option selected>30</option><option>60</option></select></label><label>Bitrate <select id="exBitrate"><option value="4000000">4 Mbps</option><option value="6000000" selected>6 Mbps</option><option value="10000000">10 Mbps</option></select></label><button id="applyExport">Apply</button><div class="hint">Browser supportनुसार MP4 किंवा WebM export होईल.</div>';
 }
+function keyframeExportState(clip,time){
+ const list=keyframes.filter(k=>k.clip===clip).sort((a,b)=>a.time-b.time);if(!list.length)return null;
+ let a=list[0],b=list[list.length-1];
+ if(time<=a.time)b=a;else if(time>=b.time)a=b;else for(let j=0;j<list.length-1;j++)if(time>=list[j].time&&time<=list[j+1].time){a=list[j];b=list[j+1];break}
+ const span=Math.max(.001,b.time-a.time),q=a===b?0:Math.max(0,Math.min(1,(time-a.time)/span)),lerp=(x,y)=>Number(x??1)+(Number(y??x??1)-Number(x??1))*q;
+ return {zoom:lerp(a.zoom,b.zoom),rotation:lerp(a.rotation,b.rotation),opacity:lerp(a.opacity,b.opacity)};
+}
+function drawKeyframedVideo(ctx,video,canvas,state){
+ const k=state||{zoom:1,rotation:0,opacity:1};ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,k.opacity));ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(Number(k.rotation||0)*Math.PI/180);ctx.scale(Number(k.zoom||1),Number(k.zoom||1));ctx.drawImage(video,-canvas.width/2,-canvas.height/2,canvas.width,canvas.height);ctx.restore();
+}
 async function exportVideo(){
  if(!files.length){msg("आधी Photo / Video निवडा.",true);return}
  const mediaFiles=files.filter(f=>f.type.startsWith("video/")||f.type.startsWith("image/"));
@@ -86,7 +96,7 @@ async function exportVideo(){
    if(!first){
      if(cs.transition==="fade" || window.transitionType==="fade"){
        ctx.fillStyle="#000";ctx.fillRect(0,0,canvas.width,canvas.height);
-       const steps=Math.max(4,Math.round(transition*24));for(let a=0;a<steps;a++){ctx.globalAlpha=a/Math.max(1,steps-1);ctx.drawImage(video,0,0,canvas.width,canvas.height);await new Promise(r=>setTimeout(r,transition*1000/steps))}
+       const steps=Math.max(4,Math.round(transition*24));for(let a=0;a<steps;a++){ctx.globalAlpha=a/Math.max(1,steps-1);const kf=keyframeExportState(i,video.currentTime);drawKeyframedVideo(ctx,video,canvas,kf);await new Promise(r=>setTimeout(r,transition*1000/steps))}
        ctx.globalAlpha=1;
      }else if(cs.transition==="flash" || window.transitionType==="flash"){
        ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);await new Promise(r=>setTimeout(r,120));
