@@ -134,20 +134,20 @@ async function exportVideo(){
  if(audioCtx)await audioCtx.resume();if(musicEl)musicEl.play().catch(()=>{});
  rec.start(200);msg("Multi-Clip Export चालू आहे…");
  let first=true;
- for(let i=0;i<videoFiles.length;i++){
-   const f=videoFiles[i],url=URL.createObjectURL(f);
+ for(let i=0;i<mediaFiles.length;i++){
+   const f=mediaFiles[i],url=URL.createObjectURL(f);
    video.src=url;video.style.display="block";video.load();
    await new Promise((resolve,reject)=>{video.onloadedmetadata=resolve;video.onerror=reject});
-   let startTime=0,endTime=video.duration;
-   if(i===currentIndex){startTime=Math.max(0,trimStart);endTime=Math.min(video.duration,trimEnd||video.duration)}
+   const cs=clipSettings[i]||settings();\n   zoom=cs.zoom||1;video.style.filter=cs.filter||"none";overlay.textContent=cs.text||"";\n   let startTime=0,endTime=video.duration;
+   if(f.type.startsWith("image/")){\n     const img=new Image();img.src=url;await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject});\n     const until=performance.now()+(cs.duration||photoDuration)*1000;\n     await new Promise(resolve=>{const drawPhoto=()=>{ctx.fillStyle="#000";ctx.fillRect(0,0,canvas.width,canvas.height);const src=img.width/img.height,dst=canvas.width/canvas.height;let dw=canvas.width,dh=canvas.height,dx=0,dy=0;if(src>dst){dh=canvas.height;dw=dh*src;dx=(canvas.width-dw)/2}else{dw=canvas.width;dh=dw/src;dy=(canvas.height-dh)/2}ctx.drawImage(img,dx,dy,dw,dh);if(overlay.textContent){ctx.font=Math.max(textSize,canvas.width*.055)+"px system-ui";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.strokeStyle="#000";ctx.lineWidth=7;ctx.strokeText(overlay.textContent,canvas.width/2,canvas.height*textY/100);ctx.fillText(overlay.textContent,canvas.width/2,canvas.height*textY/100)}if(performance.now()>=until){resolve();return}requestAnimationFrame(drawPhoto)};requestAnimationFrame(drawPhoto)});URL.revokeObjectURL(url);first=false;continue;\n   }\n   if(i===currentIndex){startTime=Math.max(0,trimStart);endTime=Math.min(video.duration,trimEnd||video.duration)}
    video.currentTime=startTime;await new Promise(r=>video.addEventListener("seeked",r,{once:true}));
    const transition=.45;
    if(!first){
-     if(window.transitionType==="fade"){
+     if(cs.transition==="fade" || window.transitionType==="fade"){
        ctx.fillStyle="#000";ctx.fillRect(0,0,canvas.width,canvas.height);
        for(let a=0;a<12;a++){ctx.globalAlpha=a/12;ctx.drawImage(video,0,0,canvas.width,canvas.height);await new Promise(r=>setTimeout(r,25))}
        ctx.globalAlpha=1;
-     }else if(window.transitionType==="flash"){
+     }else if(cs.transition==="flash" || window.transitionType==="flash"){
        ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);await new Promise(r=>setTimeout(r,120));
      }
    }
