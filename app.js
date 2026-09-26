@@ -29,7 +29,7 @@ tools.oninput=e=>{
  if(e.target.id==="fadeIn")musicFadeIn=+e.target.value;
  if(e.target.id==="fadeOut")musicFadeOut=+e.target.value;
  if(e.target.id==="clipDur"){settings().duration=+e.target.value;$("#clipDurVal").textContent=settings().duration+" sec";renderTimeline()}
- if(e.target.id==="clipTrans"){settings().transition=e.target.value;}
+ if(e.target.id==="clipTrans"){settings().transition=e.target.value;} if(selectedKeyframe&&e.target.id==="kfZoom"){selectedKeyframe.zoom=+e.target.value;$("#kfZoomVal").textContent=(+e.target.value).toFixed(1)+"x";applyKeyframePreview(selectedKeyframe.time)} if(selectedKeyframe&&e.target.id==="kfRotation"){selectedKeyframe.rotation=+e.target.value;$("#kfRotationVal").textContent=+e.target.value+"°";applyKeyframePreview(selectedKeyframe.time)} if(selectedKeyframe&&e.target.id==="kfOpacity"){selectedKeyframe.opacity=+e.target.value;$("#kfOpacityVal").textContent=Math.round(+e.target.value*100)+"%";applyKeyframePreview(selectedKeyframe.time)}
 };
 
 $("#music").onchange=e=>{
