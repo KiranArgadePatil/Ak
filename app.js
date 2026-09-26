@@ -24,6 +24,28 @@ function applyChromaCanvas(ctx,canvas,strength){
  }
  ctx.putImageData(img,0,0);
 }
+function animationProgress(type,p){
+ p=Math.max(0,Math.min(1,p));
+ if(type==="fade")return {opacity:p,scale:1,y:0};
+ if(type==="pop")return {opacity:p,scale:.7+.3*p,y:0};
+ if(type==="zoom")return {opacity:p,scale:.6+.4*p,y:0};
+ if(type==="slideUp")return {opacity:p,scale:1,y:(1-p)*.18};
+ if(type==="slideDown")return {opacity:p,scale:1,y:-(1-p)*.18};
+ if(type==="bounce")return {opacity:1,scale:1+.08*Math.sin(p*Math.PI*4)*(1-p),y:0};
+ return {opacity:1,scale:1,y:0};
+}
+function applyTextAnimationPreview(){
+ if(!overlay)return;
+ const c=settings(),type=c.textAnimation||"none";
+ const d=Math.max(.2,Number(c.duration||photoDuration||5));
+ const p=Math.max(0,Math.min(1,(video.currentTime||0)/d));
+ const a=animationProgress(type,Math.min(1,p/.35));
+ overlay.style.opacity=a.opacity;
+ overlay.style.transform="translate(-50%,-50%) translateY("+(a.y*100)+"%) scale("+(Number(c.textScale||1)*a.scale)+") rotate("+(Number(c.textRotation||0))+"deg)";
+}
+function showTextAnimation(){
+ tools.innerHTML='<b>✨ Text Animation</b><button data-textanim="none">None</button><button data-textanim="fade">Fade</button><button data-textanim="pop">Pop</button><button data-textanim="zoom">Zoom</button><button data-textanim="slideUp">Slide Up</button><button data-textanim="slideDown">Slide Down</button><button data-textanim="bounce">Bounce</button>';
+}
 function showChroma(){
  tools.innerHTML='<b>🟩 Chroma Key / Green Screen</b><label>Strength <input id="chromaStrength" type="range" min="0" max="1" step=".05" value="'+(settings().chromaStrength||.6)+'"></label><button id="chromaOn">'+(settings().chroma?"Disable":"Enable")+'</button><div class="hint">Green pixels preview/export pipelineमध्ये transparent केले जातील.</div>';
  $("#chromaStrength").oninput=()=>{settings().chromaStrength=+$("#chromaStrength").value;applyVisualSettings()};
