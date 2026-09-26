@@ -24,12 +24,27 @@ function load(f){
  renderTimeline();
 }
 
+function bindTrimHandles(){
+ document.querySelectorAll(".tl-handle").forEach(h=>{
+  h.onpointerdown=e=>{
+   e.preventDefault();e.stopPropagation();
+   const clip=h.closest(".clip"),i=+clip.dataset.i,f=files[i];
+   if(!f.type.startsWith("video/"))return;
+   currentIndex=i;const s=clipSettings[i]||settings(),dur=video.duration||s.trimEnd||1;
+   if(s.trimStart==null)s.trimStart=0;if(s.trimEnd==null)s.trimEnd=dur;
+   const x=e.clientX,os=s.trimStart,oe=s.trimEnd,w=Math.max(clip.getBoundingClientRect().width,110),k=dur/w;
+   h.setPointerCapture(e.pointerId);
+   h.onpointermove=ev=>{const d=(ev.clientX-x)*k;if(h.dataset.side==="left")s.trimStart=Math.max(0,Math.min(os+d,s.trimEnd-.2));else s.trimEnd=Math.min(dur,Math.max(oe+d,s.trimStart+.2));trimStart=s.trimStart;trimEnd=s.trimEnd;status.textContent="Trim: "+fmt(s.trimStart)+" → "+fmt(s.trimEnd);renderTimeline()};
+   h.onpointerup=ev=>{try{h.releasePointerCapture(ev.pointerId)}catch(_){};load(files[i]);msg("Trim सेट झाले ✓")};
+  };
+ });
+}
 function renderTimeline(){
  const track=$("#track")||timeline;
  if(!files.length){track.textContent="Media जोडल्यावर Timeline येथे दिसेल";return}
  track.innerHTML='<div class="timeline-track">'+files.map((f,i)=>{
    const s=clipSettings[i]||settings(),active=i===currentIndex?" active":"";
-   return '<span class="clip'+active+'" draggable="true" data-i="'+i+'"><i class="handle left"></i>'+ (i+1)+" • "+f.name.slice(0,16)+'<small>'+ (f.type.startsWith("image/")?"Photo":"Video")+(f.type.startsWith("image/")?" • "+s.duration+"s":"")+'</small><i class="handle right"></i></span>';
+   return '<span class="clip'+active+'" draggable="true" data-i="'+i+'"><i class="tl-handle handle left" data-side="left"></i>'+ (i+1)+" • "+f.name.slice(0,16)+'<small>'+ (f.type.startsWith("image/")?"Photo":"Video")+(f.type.startsWith("image/")?" • "+s.duration+"s":"")+'</small><i class="tl-handle handle right" data-side="right"></i></span>';
  }).join("")+'</div>';
  const clips=[...track.querySelectorAll(".clip")];
  clips.forEach(c=>{
