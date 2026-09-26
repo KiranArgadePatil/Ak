@@ -73,6 +73,18 @@ function act(a){
  if(a==="split"){
    if(currentImage){tools.innerHTML="<b>Photo साठी Split नाही.</b>";return}
    tools.innerHTML='<b>✂️ Split</b><span>Current: '+fmt(video.currentTime)+'</span><button id="addSplit">येथे Split</button><button id="clearSplit">Clear</button><div class="hint">Video थांबवून ज्या ठिकाणी कट हवा तेथे Split दाबा.</div>';
+   $("#addSplit").onclick=()=>{
+     const i=currentIndex,p=video.currentTime,d=video.duration,s=clipSettings[i]||settings();
+     const a=s.trimStart??0,b=s.trimEnd??d;
+     if(p<=a+.2||p>=b-.2){msg("Split साठी मधला point निवडा.");return}
+     const first={...s,trimStart:a,trimEnd:p};
+     const second={...s,trimStart:p,trimEnd:b};
+     clipSettings.splice(i,1,first,second);
+     files.splice(i,0,files[i]);
+     currentIndex=i+1;splitPoints=[];
+     renderTimeline();load(files[currentIndex]);msg("Video दोन clips मध्ये Split झाले ✓");
+   };
+   $("#clearSplit").onclick=()=>{splitPoints=[];msg("जुने split points clear झाले")};
  }
  if(a==="ratio")tools.innerHTML='<b>Ratio</b><button data-r="original">Original</button><button data-r="9:16">9:16 Reel</button><button data-r="1:1">1:1</button><button data-r="16:9">16:9</button>';
  if(a==="text")tools.innerHTML='<input id="txt" placeholder="Marathi / English Text लिहा"><label>Size <input id="fontSize" type="range" min="16" max="80" value="30"></label><label>Position <input id="textY" type="range" min="5" max="90" value="16"></label><button id="add">Add</button><button id="clearText">Clear</button>';
