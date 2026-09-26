@@ -210,33 +210,37 @@ async function exportVideo(){
 }
 async function playAll(){
  if(!files.length){msg("आधी Photo / Video निवडा.",true);return}
- for(let i=0;i<files.length;i++){
-  currentIndex=i;renderTimeline();const f=files[i],s=clipSettings[i]||settings(),url=URL.createObjectURL(f);
-  if(f.type.startsWith("image/")){
-   video.pause();video.style.display="none";empty.style.display="none";
-   const img=new Image();img.src=url;await new Promise((r,x)=>{img.onload=r;img.onerror=x});
-   overlay.textContent=s.text||"";
-   const until=performance.now()+(s.duration||photoDuration)*1000;
-   await new Promise(r=>{const loop=()=>{if(performance.now()>=until){r();return}requestAnimationFrame(loop)};loop()});
-  }else{
-   video.style.display="block";empty.style.display="none";video.src=url;video.load();
-   await new Promise((r,x)=>{video.onloadedmetadata=r;video.onerror=x});
-   const a=s.trimStart??0,b=s.trimEnd??video.duration;
-   video.currentTime=a;await new Promise(r=>video.addEventListener("seeked",r,{once:true}));
-   overlay.textContent=s.text||"";video.style.filter=s.filter||"none";video.style.transform="scale("+(s.zoom||1)+")";
-   await video.play().catch(()=>{});
-   await new Promise(resolve=>{
-    const check=()=>{if(video.currentTime>=b||video.ended){video.pause();resolve()}else requestAnimationFrame(check)};check();
-   });
+ const oldSrc=video.src,oldDisplay=video.style.display,oldText=overlay.textContent,oldFilter=video.style.filter;
+ try{
+  for(let i=0;i<files.length;i++){
+   currentIndex=i;renderTimeline();
+   const f=files[i],s=clipSettings[i]||settings(),url=URL.createObjectURL(f);
+   if(f.type.startsWith("image/")){
+    video.pause();video.style.display="none";empty.style.display="none";overlay.textContent=s.text||"";
+    const until=performance.now()+(s.duration||photoDuration)*1000;
+    await new Promise(r=>{const loop=()=>performance.now()>=until?r():requestAnimationFrame(loop);loop()});
+   }else{
+    video.style.display="block";empty.style.display="none";video.src=url;video.load();
+    await new Promise((r,x)=>{video.onloadedmetadata=r;video.onerror=x});
+    const a=s.trimStart??0,b=s.trimEnd??video.duration;
+    video.currentTime=a;await new Promise(r=>video.addEventListener("seeked",r,{once:true}));
+    overlay.textContent=s.text||"";video.style.filter=s.filter||"none";video.style.transform="scale("+(s.zoom||1)+")";
+    await video.play().catch(()=>{});
+    await new Promise(resolve=>{const check=()=>video.currentTime>=b||video.ended?(video.pause(),resolve()):requestAnimationFrame(check);check()});
+   }
+   URL.revokeObjectURL(url);
+   if(i<files.length-1){
+    const t=s.transition||"none";
+    if(t==="flash"){preview.style.opacity="0.2";await new Promise(r=>setTimeout(r,140));preview.style.opacity="1"}
+    if(t==="fade"){preview.style.opacity="0";await new Promise(r=>setTimeout(r,120));preview.style.opacity="1"}
+   }
   }
-  URL.revokeObjectURL(url);
-  if(i<files.length-1){
-   const t=s.transition||"none";
-   if(t==="flash"){overlay.style.background="#fff";overlay.style.color="#000";await new Promise(r=>setTimeout(r,140));overlay.style.background="";overlay.style.color=""}
-   if(t==="fade"){preview.style.opacity="0";await new Promise(r=>setTimeout(r,120));preview.style.opacity="1"}
-  }
+  msg("Preview पूर्ण झाले ✓");
+ }finally{
+  video.pause();video.style.filter=oldFilter;overlay.textContent=oldText;video.style.display=oldDisplay;
+  if(oldSrc){video.src=oldSrc;video.load()}
+  preview.style.opacity="1";
  }
- msg("Preview पूर्ण झाले ✓");
 }
 $("#playAll").onclick=playAll;
 $("#export").onclick=exportVideo;
