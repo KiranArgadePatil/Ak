@@ -34,9 +34,10 @@ tools.oninput=e=>{
 
 $("#music").onchange=e=>{
  musicFile=e.target.files[0];
- if(musicFile){musicInfo.innerHTML='<div class="music">🎵 '+musicFile.name+' <button id="removeMusic">×</button><label>Music volume <input id="musicVol" type="range" min="0" max="1" step=".05" value=".7"></label></div>';msg("Music जोडले.")}
+ if(musicFile){renderOverlayTracks();renderAudioWaveform();musicInfo.innerHTML='<div class="music">🎵 '+musicFile.name+' <button id="removeMusic">×</button><label>Music volume <input id="musicVol" type="range" min="0" max="1" step=".05" value=".7"></label></div>';msg("Music जोडले.")}
 };
-renderOverlayTracks();bindOverlayPreviewDrag();
+function renderAudioWaveform(){const el=document.getElementById("audioTrack");if(!el||typeof musicFile==="undefined"||!musicFile)return;const old=el.querySelector(".audio-wave");if(old)old.remove();const w=document.createElement("div");w.className="audio-wave";w.style.cssText="position:absolute;inset:2px 0;height:20px;display:flex;align-items:center;gap:1px;overflow:hidden;pointer-events:none";const bars=80;for(let i=0;i<bars;i++){const b=document.createElement("i");b.style.cssText="display:block;width:3px;min-width:3px;height:"+((20*(.2+.8*Math.abs(Math.sin(i*.73))))|0)+"px;border-radius:2px;background:#6f7788";w.appendChild(b)}el.appendChild(w)}
+renderOverlayTracks();bindOverlayPreviewDrag();renderAudioWaveform();
 musicInfo.onclick=e=>{if(e.target.id==="removeMusic"){musicFile=null;musicInfo.innerHTML="";msg("Music काढले.")}};
 
 function mimeType(){
