@@ -1,18 +1,27 @@
 <!doctype html><html lang="mr"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><meta name="theme-color" content="#09090d"><title>AK Video Editor</title><link rel="stylesheet" href="style.css"></head><body>
 <header><div class="brand"><b>AK</b><span>AK Video Editor</span></div><div class="top-actions"><button id="new">＋ New</button><button id="saveProject">💾 Save</button><button id="export">Export</button></div></header>
 <main>
-<section class="editor-shell">
+<section id="homeScreen" class="home-screen">
+  <div class="home-hero"><div><h1>AK Video Editor</h1><p>Make your next video. Fast.</p></div><button id="homeNewProject">＋ New project</button></div>
+  <div class="home-search">🔎 <input id="templateSearch" placeholder="Search templates, effects, transitions..."></div>
+  <section class="home-section"><div class="section-title"><b>Quick actions</b><span>See all</span></div><div class="quick-grid">
+    <button id="homeImport">＋<small>New project</small></button><button>🎞️<small>Templates</small></button><button>🖼️<small>Photo editor</small></button><button>🎵<small>Auto beat</small></button>
+  </div></section>
+  <section class="home-section"><div class="section-title"><b>Templates</b><span>Trending</span></div><div class="template-row">
+    <article><div class="tpl tpl1">✨</div><b>Trending Edit</b><small>3 clips</small></article><article><div class="tpl tpl2">⚡</div><b>Beat Sync</b><small>5 clips</small></article><article><div class="tpl tpl3">🎬</div><b>Cinematic</b><small>8 clips</small></article><article><div class="tpl tpl4">❤️</div><b>Photo Story</b><small>6 clips</small></article>
+  </div></section>
+  <section class="home-section"><div class="section-title"><b>Tools</b><span>More</span></div><div class="tool-cards">
+    <button data-home-tool="ai">✨ AI tools</button><button data-home-tool="caption">T Auto captions</button><button data-home-tool="bg">◉ Remove background</button><button data-home-tool="effects">✦ Effects</button>
+  </div></section>
+  <section class="home-section"><div class="section-title"><b>Recent projects</b><span>See all</span></div><div id="recentProjects" class="recent-empty">Your projects will appear here</div></section>
+  <nav class="bottom-nav"><button class="active">⌂<span>Home</span></button><button>▣<span>Templates</span></button><button id="bottomNew">＋<span>Create</span></button><button>▤<span>Inbox</span></button><button>◉<span>Me</span></button></nav>
+</section>
+<section id="editorScreen" class="editor-screen" hidden>
+<div class="editor-shell">
 <aside class="sidebar">
 <button data-a="trim">✂️<span>Trim</span></button><button data-a="split">🔪<span>Split</span></button><button data-a="text">T<span>Text</span></button><button data-a="zoom">🔍<span>Zoom</span></button><button data-a="speed">⏩<span>Speed</span></button><button data-a="filter">✨<span>Filters</span></button><button data-a="volume">🔊<span>Audio</span></button><button data-a="transition">◈<span>Transition</span></button><button data-a="clipSettings">⚙️<span>Clip</span></button><button data-adv="keyframes">🎯<span>Keyframe</span></button><button data-adv="crop">▣<span>Crop</span></button><button data-adv="adjust">🎨<span>Adjust</span></button><button data-adv="transform">↻<span>Transform</span></button><button data-adv="waveform">〽️<span>Waveform</span></button></aside>
 <section class="workspace">
 <div class="preview-wrap"><div class="preview" id="preview"><video id="video" controls playsinline></video><div id="empty">🎬<strong>फोटो / व्हिडिओ निवडा</strong><small>AK Video Editor</small></div><div id="overlay"></div></div></div>
-<div class="media-bar"><label>＋ Add media<input id="media" type="file" accept="video/*,image/*" multiple></label><label>🎵 Add audio<input id="music" type="file" accept="audio/*"></label><button id="playAll">▶ Play</button><button id="undoBtn">↶</button><button id="redoBtn">↷</button><button id="loadProject">📂 Load</button><input id="projectFile" type="file" accept=".json,application/json" hidden></div>
-<div id="musicInfo"></div>
-<div class="timeline-head"><b>Timeline</b><span>Drag clips • Trim handles • Transitions</span></div>
-<div id="timeline"><div id="track">Media जोडल्यावर Timeline येथे दिसेल</div></div>
-<div id="tools"></div>
-<div id="projectTools" class="tools legacy-project"><button id="saveProject2">💾 Save Project</button></div>
-<div id="advancedTools" class="tools"></div>
-<div id="status"></div>
-</section></section>
-</main><footer>AK Video Editor • CapCut-inspired creator workspace</footer><script src="app.js"></script><script>document.getElementById("saveProject2")?.addEventListener("click",()=>document.getElementById("saveProject")?.click());</script></body></html>
+<div class="media-bar"><button id="backHome">⌂ Home</button><label>＋ Add media<input id="media" type="file" accept="video/*,image/*" multiple></label><label>🎵 Add audio<input id="music" type="file" accept="audio/*"></label><button id="playAll">▶ Play</button><button id="undoBtn">↶</button><button id="redoBtn">↷</button><button id="loadProject">📂 Load</button><input id="projectFile" type="file" accept=".json,application/json" hidden></div>
+<div id="musicInfo"></div><div class="timeline-head"><b>Timeline</b><span>Drag clips • Trim handles • Transitions</span></div><div id="timeline"><div id="track">Media जोडल्यावर Timeline येथे दिसेल</div></div><div id="tools"></div><div id="projectTools" class="tools legacy-project"><button id="saveProject2">💾 Save Project</button></div><div id="advancedTools" class="tools"></div><div id="status"></div>
+</section></div></section></main><footer>AK Video Editor • CapCut-inspired creator workspace</footer><script src="app.js"></script><script>document.getElementById("saveProject2")?.addEventListener("click",()=>document.getElementById("saveProject")?.click());</script></body></html>
