@@ -74,7 +74,12 @@ function renderStickers(){
  });
 }
 function showStickerObjects(){
- tools.innerHTML='<b>🧩 Multiple Stickers</b><div class="sticker-grid"><button data-addsticker="⭐">⭐</button><button data-addsticker="❤️">❤️</button><button data-addsticker="🔥">🔥</button><button data-addsticker="✨">✨</button><button data-addsticker="😂">😂</button><button data-addsticker="🎉">🎉</button></div><div class="hint">Sticker drag करा • Double tap = rotate</div>';
+ const a=stickerList(),sel=a[a.length-1];
+ tools.innerHTML='<b>🧩 Multiple Stickers</b><div class="sticker-grid"><button data-addsticker="⭐">⭐</button><button data-addsticker="❤️">❤️</button><button data-addsticker="🔥">🔥</button><button data-addsticker="✨">✨</button><button data-addsticker="😂">😂</button><button data-addsticker="🎉">🎉</button></div><label>Size <input id="stScale" type="range" min=".3" max="3" step=".05" value="'+(sel?sel.scale:1)+'"></label><label>Rotation <input id="stRotate" type="range" min="-180" max="180" value="'+(sel?sel.rotation:0)+'"></label><label>Animation <select id="stAnim"><option value="none">None</option><option value="fade">Fade</option><option value="pop">Pop</option><option value="zoom">Zoom</option><option value="slideUp">Slide Up</option><option value="slideDown">Slide Down</option><option value="spin">Spin</option></select></label><div class="hint">शेवटचा जोडलेला sticker निवडलेला आहे.</div>';
+ const get=()=>stickerList()[stickerList().length-1];
+ $("#stScale").oninput=()=>{const x=get();if(x){x.scale=Number($("#stScale").value);renderStickers()}};
+ $("#stRotate").oninput=()=>{const x=get();if(x){x.rotation=Number($("#stRotate").value);renderStickers()}};
+ $("#stAnim").onchange=()=>{const x=get();if(x)x.animation=$("#stAnim").value};
 }
 function applyStickerAnimationPreview(){
  if(!overlay||!settings().sticker)return;
