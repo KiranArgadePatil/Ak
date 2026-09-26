@@ -1,7 +1,7 @@
 const $=s=>document.querySelector(s);
 const video=$("#video"),empty=$("#empty"),media=$("#media"),timeline=$("#timeline"),tools=$("#tools"),overlay=$("#overlay"),preview=$("#preview"),musicInfo=$("#musicInfo"),status=$("#status");
 let files=[],musicFile=null,trimStart=0,trimEnd=0,ratio="original",splitPoints=[],currentIndex=0,currentImage=null,textSize=30,textY=16,zoom=1,photoDuration=5,musicFadeIn=0,musicFadeOut=0,playbackSpeed=1;
-const clipSettings=[];
+const clipSettings=[]; const keyframes=[];
 const settings=()=>clipSettings[currentIndex]||(clipSettings[currentIndex]={duration:photoDuration,text:"",filter:"none",zoom:1,transition:"none",rotation:0,opacity:1,brightness:1,contrast:1,saturation:1,blur:0,mirror:false,speed:1});
 
 const fmt=s=>!isFinite(s)?"0:00":Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0");
@@ -114,14 +114,28 @@ function renderTimeline(){
  });
 }
 
-function applyVisualSettings(){
+function drawWaveform(){
+ const cv=$("#waveCanvas"); if(!cv||!musicFile)return;
+ const ac=new (window.AudioContext||window.webkitAudioContext)(),rd=new FileReader();
+ rd.onload=()=>ac.decodeAudioData(rd.result).then(buf=>{const x=cv.getContext("2d"),d=buf.getChannelData(0),step=Math.max(1,Math.floor(d.length/cv.width));x.clearRect(0,0,cv.width,cv.height);x.beginPath();for(let i=0;i<cv.width;i++){let sum=0,n=0;for(let j=0;j<step;j++){const v=d[i*step+j]||0;sum+=Math.abs(v);n++}const y=45-(sum/n)*40;i?x.lineTo(i,y):x.moveTo(i,y)}x.stroke();ac.close()}).catch(()=>{});
+ rd.readAsArrayBuffer(musicFile);
+}
+\nfunction applyVisualSettings(){
  const s=settings();
  video.style.filter='brightness('+s.brightness+') contrast('+s.contrast+') saturate('+s.saturation+') blur('+s.blur+'px) '+s.filter;
  video.style.transform='scale('+s.zoom+') rotate('+s.rotation+'deg) scaleX('+(s.mirror?-1:1)+')';
  video.style.opacity=s.opacity;
  video.playbackRate=s.speed||1;
 }
-\ndocument.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>act(b.dataset.a));
+\ndocument.querySelectorAll("[data-adv]").forEach(b=>b.onclick=()=>{
+ const a=b.dataset.adv,s=settings();
+ if(a==="transform"){tools.innerHTML='<b>🔄 Transform</b><label>Zoom <input id="trZoom" type="range" min="1" max="3" step=".1" value="'+s.zoom+'"></label><label>Rotation <input id="trRot" type="range" min="-180" max="180" value="'+s.rotation+'"></label><label>Opacity <input id="trOpacity" type="range" min="0" max="1" step=".05" value="'+s.opacity+'"></label><button id="mirrorBtn">🪞 Mirror</button>';return}
+ if(a==="adjust"){tools.innerHTML='<b>🎨 Adjust</b><label>Brightness <input id="adjB" type="range" min=".3" max="2" step=".05" value="'+s.brightness+'"></label><label>Contrast <input id="adjC" type="range" min=".3" max="2" step=".05" value="'+s.contrast+'"></label><label>Saturation <input id="adjS" type="range" min="0" max="2" step=".05" value="'+s.saturation+'"></label><label>Blur <input id="adjBlur" type="range" min="0" max="12" step=".5" value="'+s.blur+'"></label>';return}
+ if(a==="crop"){tools.innerHTML='<b>✂️ Crop</b><button data-r="9:16">9:16</button><button data-r="1:1">1:1</button><button data-r="16:9">16:9</button><div class="hint">Crop presets preview/export ratio साठी वापरा.</div>';return}
+ if(a==="keyframes"){tools.innerHTML='<b>🎯 Keyframes</b><button id="addKeyframe">＋ Add Keyframe</button><button id="clearKeyframes">Clear</button><div id="kfList">Keyframes: 0</div><div class="hint">Current video time वर Zoom/Rotation/Opacity ची keyframe नोंदवा.</div>';return}
+ if(a==="waveform"){tools.innerHTML='<b>🎵 Audio Waveform</b><canvas id="waveCanvas" width="600" height="90"></canvas><div class="hint">Music निवडल्यानंतर waveform तयार करता येईल.</div>';drawWaveform();return}
+});
+document.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>act(b.dataset.a));
 
 function act(a){
  if(!video.src && !currentImage){tools.innerHTML="<b>आधी Photo / Video निवडा.</b>";return}
@@ -157,7 +171,7 @@ function act(a){
  if(a==="clipSettings"){}\n if(a==="transition")tools.innerHTML='<b>🎞️ Transition</b><button data-t="none">None</button><button data-t="fade">Fade</button><button data-t="flash">Flash</button><div class="hint">Clip बदलताना transition निवडा.</div>';
 }
 
-tools.onclick=e=>{
+tools.onclick=e=>{\n const t=e.target; if(t.id==="addKeyframe"){keyframes.push({clip:currentIndex,time:video.currentTime,zoom:settings().zoom,rotation:settings().rotation,opacity:settings().opacity});$("#kfList").textContent="Keyframes: "+keyframes.filter(k=>k.clip===currentIndex).length;msg("Keyframe जोडला ✓")} if(t.id==="clearKeyframes"){for(let i=keyframes.length-1;i>=0;i--)if(keyframes[i].clip===currentIndex)keyframes.splice(i,1);$("#kfList").textContent="Keyframes: 0";msg("Keyframes clear ✓")}
  const t=e.target; if(t.id==="speedCustom"){settings().speed=+t.value;video.playbackRate=+t.value;$("#speedVal").textContent=t.value+"×"} if(t.id==="adjB"){settings().brightness=+t.value;applyVisualSettings()} if(t.id==="adjC"){settings().contrast=+t.value;applyVisualSettings()} if(t.id==="adjS"){settings().saturation=+t.value;applyVisualSettings()} if(t.id==="adjBlur"){settings().blur=+t.value;applyVisualSettings()}
  if(t.dataset.v && video.src){playbackSpeed=+t.dataset.v;settings().speed=playbackSpeed;video.playbackRate=playbackSpeed;msg("Speed: "+playbackSpeed+"×")}
  if(t.dataset.f!==undefined && video.src){video.style.filter=t.dataset.f;settings().filter=t.dataset.f;}
