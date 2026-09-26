@@ -28,15 +28,46 @@ function bindTrimHandles(){
  document.querySelectorAll(".tl-handle").forEach(h=>{
   h.onpointerdown=e=>{
    e.preventDefault();e.stopPropagation();
-   const clip=h.closest(".clip"),i=+clip.dataset.i,f=files[i];
-   if(!f.type.startsWith("video/"))return;
+   const clip=h.closest(".clip"),i=+clip.dataset.i,f=files[i];if(!f.type.startsWith("video/"))return;
    currentIndex=i;const s=clipSettings[i]||settings(),dur=video.duration||s.trimEnd||1;
    if(s.trimStart==null)s.trimStart=0;if(s.trimEnd==null)s.trimEnd=dur;
    const x=e.clientX,os=s.trimStart,oe=s.trimEnd,w=Math.max(clip.getBoundingClientRect().width,110),k=dur/w;
    h.setPointerCapture(e.pointerId);
-   h.onpointermove=ev=>{const d=(ev.clientX-x)*k;if(h.dataset.side==="left")s.trimStart=Math.max(0,Math.min(os+d,s.trimEnd-.2));else s.trimEnd=Math.min(dur,Math.max(oe+d,s.trimStart+.2));trimStart=s.trimStart;trimEnd=s.trimEnd;status.textContent="Trim: "+fmt(s.trimStart)+" → "+fmt(s.trimEnd);renderTimeline()};
-   h.onpointerup=ev=>{try{h.releasePointerCapture(ev.pointerId)}catch(_){};load(files[i]);msg("Trim सेट झाले ✓")};
+   h.onpointermove=ev=>{
+    const d=(ev.clientX-x)*k;
+    if(h.dataset.side==="left")s.trimStart=Math.max(0,Math.min(os+d,s.trimEnd-.2));else s.trimEnd=Math.min(dur,Math.max(oe+d,s.trimStart+.2));
+    trimStart=s.trimStart;trimEnd=s.trimEnd;status.textContent="Trim: "+fmt(s.trimStart)+" → "+fmt(s.trimEnd);
+   };
+   h.onpointerup=ev=>{h.onpointermove=null;try{h.releasePointerCapture(ev.pointerId)}catch(_){};load(files[i]);renderTimeline();msg("Trim सेट झाले ✓")};
   };
+ });
+}
+function bindMobileReorder(){
+ let drag=null;
+ document.querySelectorAll(".clip").forEach(c=>{
+  c.onpointerdown=e=>{
+   if(e.target.classList.contains("handle"))return;
+   drag={el:c,i:+c.dataset.i,x:e.clientX,y:e.clientY,moved:false};
+   c.setPointerCapture(e.pointerId);c.classList.add("dragging");
+  };
+  c.onpointermove=e=>{
+   if(!drag||drag.el!==c)return;
+   if(Math.abs(e.clientX-drag.x)<8&&!drag.moved)return;
+   drag.moved=true;
+   const clips=[...document.querySelectorAll(".clip")].filter(x=>x!==c);
+   const target=clips.find(x=>{const r=x.getBoundingClientRect();return e.clientX<r.left+r.width/2});
+   if(target)c.parentNode.insertBefore(c,target);else c.parentNode.appendChild(c);
+  };
+  c.onpointerup=e=>{
+   if(!drag||drag.el!==c)return;
+   c.classList.remove("dragging");
+   if(drag.moved){
+    const order=[...document.querySelectorAll(".clip")].map(x=>+x.dataset.i),nf=order.map(i=>files[i]),ns=order.map(i=>clipSettings[i]);
+    files=nf;clipSettings.splice(0,clipSettings.length,...ns);currentIndex=Math.max(0,order.indexOf(currentIndex));renderTimeline();load(files[currentIndex]);msg("Clip क्रम बदलला ✓");
+   }else{currentIndex=+c.dataset.i;load(files[currentIndex]);renderTimeline()}
+   drag=null;
+  };
+  c.onpointercancel=()=>{c.classList.remove("dragging");drag=null;renderTimeline()};
  });
 }
 async function addTimelineThumbs(){
@@ -67,7 +98,7 @@ function renderTimeline(){
  const gapButtons=[...track.querySelectorAll(".clip")];
  gapButtons.forEach((clip,i)=>{if(i<gapButtons.length-1){const s=clipSettings[i]||settings();const b=document.createElement("button");b.className="tl-transition";b.textContent=s.transition==="fade"?"↔ Fade":s.transition==="flash"?"⚡ Flash":"＋ Transition";b.onclick=e=>{e.stopPropagation();s.transition=s.transition==="none"?"fade":s.transition==="fade"?"flash":"none";renderTimeline();msg("Transition: "+(s.transition==="none"?"None":s.transition==="fade"?"Fade":"Flash"))};clip.after(b)}});
  addTimelineThumbs();
- const clips=[...track.querySelectorAll(".clip")];
+ bindTrimHandles();bindMobileReorder(); const clips=[...track.querySelectorAll(".clip")];
  clips.forEach(c=>{
    c.onclick=e=>{if(e.target.classList.contains("handle"))return;currentIndex=+c.dataset.i;splitPoints=[];load(files[currentIndex]);renderTimeline()};
    c.ondragstart=()=>{c.classList.add("dragging");window.dragClipIndex=+c.dataset.i};
