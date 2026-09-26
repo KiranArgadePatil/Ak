@@ -73,6 +73,19 @@ function renderStickers(){
   overlay.appendChild(el);
  });
 }
+function renderKeyframeTracks(){
+ const lane=document.querySelector("#timeline");if(!lane)return;
+ document.querySelectorAll(".keyframe-marker").forEach(x=>x.remove());
+ const pxPerSec=32;
+ keyframes.filter(k=>k.clip===currentIndex).forEach((k,n)=>{
+  const x=document.createElement("div");x.className="keyframe-marker";x.dataset.kfIndex=n;x.style.left=(Math.max(0,k.time)*pxPerSec)+"px";x.textContent="♦";x.title="Keyframe "+(n+1)+" • "+fmt(k.time);x.style.pointerEvents="auto";x.style.touchAction="none";
+  x.onpointerdown=e=>{e.stopPropagation();x.setPointerCapture(e.pointerId);const sx=e.clientX,st=k.time;
+   x.onpointermove=m=>{k.time=Math.max(0,Math.round((st+(m.clientX-sx)/pxPerSec)*10)/10);x.style.left=(k.time*pxPerSec)+"px";x.title="Keyframe "+(n+1)+" • "+fmt(k.time)};
+   x.onpointerup=x.onpointercancel=()=>{x.onpointermove=null;x.onpointerup=null;x.onpointercancel=null;keyframes.sort((a,b)=>a.clip-b.clip||a.time-b.time);renderKeyframeTracks();msg("Keyframe वेळ बदलली ✓")};
+  };
+  lane.appendChild(x);
+ });
+}
 function renderTransitionTracks(){
  const lane=document.querySelector("#timeline");if(!lane)return;
  document.querySelectorAll(".transition-marker").forEach(x=>x.remove());
@@ -158,7 +171,7 @@ tools.onclick=e=>{\n const t=e.target; if(t.dataset.chroma){settings().chroma=t.
  if(t.id==="clearText"){overlay.textContent="";settings().text="";renderOverlayTracks();}
  if(t.id==="applyTrim"){
    const s=parseFloat($("#ts").value),en=parseFloat($("#te").value);
-   if(s>=0&&en>s&&en<=(currentImage?5:video.duration)){trimStart=s;trimEnd=en;if(video.src)video.currentTime=s;renderTimeline();msg("Trim सेट: "+fmt(s)+" → "+fmt(en))}
+   if(s>=0&&en>s&&en<=(currentImage?5:video.duration)){trimStart=s;trimEnd=en;if(video.src)video.currentTime=s;renderTimeline();renderKeyframeTracks();msg("Trim सेट: "+fmt(s)+" → "+fmt(en))}
    else msg("Start/End चुकीचे आहेत.",true)
  }
  if(t.id==="addSplit"){
