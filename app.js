@@ -338,6 +338,9 @@ async function playAll(){
   preview.style.opacity="1";
  }
 }
+function selectTemplate(name){openEditor();msg("Template निवडला: "+name+" ✓");}
+document.querySelectorAll(".template-card").forEach(c=>c.addEventListener("click",()=>selectTemplate(c.dataset.template)));
+document.querySelectorAll("[data-home-tool]").forEach(c=>c.addEventListener("click",()=>{openEditor();msg(c.textContent.trim()+" tool उघडला ✓")}));
 function openEditor(){const h=$("#homeScreen"),e=$("#editorScreen");if(h)h.hidden=true;if(e)e.hidden=false;}
 function openHome(){const h=$("#homeScreen"),e=$("#editorScreen");if(h)h.hidden=false;if(e)e.hidden=true;}
 $("#homeNewProject")?.addEventListener("click",openEditor);
