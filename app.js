@@ -294,8 +294,23 @@ async function playAll(){
    URL.revokeObjectURL(url);
    if(i<files.length-1){
     const t=s.transition||"none";
-    if(t==="flash"){preview.style.opacity="0.2";await new Promise(r=>setTimeout(r,140));preview.style.opacity="1"}
-    if(t==="fade"){preview.style.opacity="0";await new Promise(r=>setTimeout(r,120));preview.style.opacity="1"}
+    const ms=Math.max(100,Math.min(2000,Number(s.transitionDuration||0.45)*1000));
+    if(["flash","fade","zoom","slide","wipe","spin","blur"].includes(t)){
+     const baseOpacity=preview.style.opacity||"1",baseTransform=preview.style.transform||"",baseFilter=preview.style.filter||"",baseClip=preview.style.clipPath||"none",started=performance.now();
+     await new Promise(resolve=>{
+      const fx=()=>{
+       const p=Math.min(1,(performance.now()-started)/ms);
+       preview.style.opacity=t==="flash"?(p<.5?"0.15":"1"):String(p);
+       if(t==="zoom")preview.style.transform="scale("+(0.65+0.35*p)+")";
+       if(t==="slide")preview.style.transform="translateX("+(100*(1-p))+"%)";
+       if(t==="spin")preview.style.transform="rotate("+((1-p)*180)+"deg) scale("+(0.75+0.25*p)+")";
+       if(t==="blur")preview.style.filter="blur("+(8*(1-p))+"px)";
+       if(t==="wipe")preview.style.clipPath="inset(0 "+((1-p)*100)+"% 0 0)";
+       if(p>=1){preview.style.opacity=baseOpacity;preview.style.transform=baseTransform;preview.style.filter=baseFilter;preview.style.clipPath=baseClip;resolve()}else requestAnimationFrame(fx);
+      };
+      requestAnimationFrame(fx);
+     });
+    }
    }
   }
   msg("Preview पूर्ण झाले ✓");
