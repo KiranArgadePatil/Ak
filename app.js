@@ -1,7 +1,15 @@
 const $=s=>document.querySelector(s);
 const video=$("#video"),empty=$("#empty"),media=$("#media"),timeline=$("#timeline"),tools=$("#tools"),overlay=$("#overlay"),preview=$("#preview"),musicInfo=$("#musicInfo"),status=$("#status");
 let files=[],musicFile=null,trimStart=0,trimEnd=0,ratio="original",splitPoints=[],currentIndex=0,currentImage=null,textSize=30,textY=16,zoom=1,photoDuration=5,musicFadeIn=0,musicFadeOut=0,playbackSpeed=1;
-const clipSettings=[]; const keyframes=[];
+const clipSettings=[];const history=[],redoHistory=[];
+let restoringHistory=false;
+function projectState(){return {ratio,photoDuration,textSize,textY,zoom,files:files.map(f=>({name:f.name,type:f.type,size:f.size,lastModified:f.lastModified})),clipSettings:JSON.parse(JSON.stringify(clipSettings)),keyframes:JSON.parse(JSON.stringify(keyframes))};}
+function pushHistory(){if(restoringHistory)return;history.push(projectState());if(history.length>30)history.shift();redoHistory.length=0;}
+function restoreState(st){if(!st)return;restoringHistory=true;ratio=st.ratio||ratio;photoDuration=st.photoDuration||photoDuration;textSize=st.textSize||textSize;textY=st.textY||textY;zoom=st.zoom||zoom;clipSettings.splice(0,clipSettings.length,...(st.clipSettings||[]));keyframes.splice(0,keyframes.length,...(st.keyframes||[]));renderTimeline();restoringHistory=false;}
+function saveProject(){const blob=new Blob([JSON.stringify(projectState(),null,2)],{type:"application/json"});const a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="AK-Video-Project.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);msg("Project save झाला ✓");}
+function undo(){if(!history.length)return msg("Undo साठी बदल नाही.");redoHistory.push(projectState());restoreState(history.pop());msg("Undo ✓");}
+function redo(){if(!redoHistory.length)return msg("Redo साठी बदल नाही.");history.push(projectState());restoreState(redoHistory.pop());msg("Redo ✓");}
+ const keyframes=[];
 const settings=()=>clipSettings[currentIndex]||(clipSettings[currentIndex]={duration:photoDuration,text:"",filter:"none",zoom:1,transition:"none",rotation:0,opacity:1,brightness:1,contrast:1,saturation:1,blur:0,mirror:false,speed:1});
 
 const fmt=s=>!isFinite(s)?"0:00":Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0");
@@ -332,3 +340,9 @@ async function playAll(){
 $("#playAll").onclick=playAll;
 $("#export").onclick=exportVideo;
 $("#new").onclick=()=>location.reload();
+
+$("#saveProject").onclick=saveProject;
+$("#undoBtn").onclick=undo;
+$("#redoBtn").onclick=redo;
+$("#loadProject").onclick=()=>$("#projectFile").click();
+$("#projectFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=()=>{try{pushHistory();restoreState(JSON.parse(rd.result));msg("Project load झाला ✓")}catch(_){msg("Project file चुकीची आहे.",true)}};rd.readAsText(f);e.target.value="";};
