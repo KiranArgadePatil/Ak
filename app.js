@@ -68,7 +68,8 @@ function keyframeExportState(clip,time){
 function drawKeyframedVideo(ctx,video,canvas,state){
  const k=state||{zoom:1,rotation:0,opacity:1};ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,k.opacity));ctx.translate(canvas.width/2+(Number(k.x||0)*canvas.width/100),canvas.height/2+(Number(k.y||0)*canvas.height/100));ctx.rotate(Number(k.rotation||0)*Math.PI/180);ctx.scale(Number(k.zoom||1),Number(k.zoom||1));ctx.drawImage(video,-canvas.width/2,-canvas.height/2,canvas.width,canvas.height);ctx.restore();
 }
-async function exportVideo(){
+async function audioEnvelope(t){const c=typeof settings==="function"?settings():{},a=audioTimelineState(),v=Math.max(0,Math.min(1,Number(c.audioVolume??.7)));const start=Number(a.start||0),end=a.end==null?Infinity:Number(a.end),fi=Math.max(0,Number(c.audioFadeIn||0)),fo=Math.max(0,Number(c.audioFadeOut||0));if(t<start||t>=end)return 0;let g=1;if(fi)g=Math.min(g,Math.max(0,(t-start)/fi));if(fo&&end<Infinity)g=Math.min(g,Math.max(0,(end-t)/fo));return v*g}
+function exportVideo(){
  if(!files.length){msg("आधी Photo / Video निवडा.",true);return}
  const mediaFiles=files.filter(f=>f.type.startsWith("video/")||f.type.startsWith("image/"));
  if(!mediaFiles.length){msg("Export साठी Photo / Video निवडा.",true);return}
