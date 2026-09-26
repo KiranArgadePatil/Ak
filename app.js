@@ -120,7 +120,23 @@ function drawWaveform(){
  rd.onload=()=>ac.decodeAudioData(rd.result).then(buf=>{const x=cv.getContext("2d"),d=buf.getChannelData(0),step=Math.max(1,Math.floor(d.length/cv.width));x.clearRect(0,0,cv.width,cv.height);x.beginPath();for(let i=0;i<cv.width;i++){let sum=0,n=0;for(let j=0;j<step;j++){const v=d[i*step+j]||0;sum+=Math.abs(v);n++}const y=45-(sum/n)*40;i?x.lineTo(i,y):x.moveTo(i,y)}x.stroke();ac.close()}).catch(()=>{});
  rd.readAsArrayBuffer(musicFile);
 }
-\nfunction applyVisualSettings(){
+\nfunction getKeyframeState(clip,time){
+ const list=keyframes.filter(k=>k.clip===clip).sort((a,b)=>a.time-b.time);
+ if(!list.length)return null;
+ if(time<=list[0].time)return list[0];
+ if(time>=list[list.length-1].time)return list[list.length-1];
+ for(let i=0;i<list.length-1;i++){
+  const a=list[i],b=list[i+1];
+  if(time>=a.time&&time<=b.time){const p=(time-a.time)/Math.max(.0001,b.time-a.time);return {zoom:a.zoom+(b.zoom-a.zoom)*p,rotation:a.rotation+(b.rotation-a.rotation)*p,opacity:a.opacity+(b.opacity-a.opacity)*p};}
+ }
+ return null;
+}
+function applyKeyframeState(){
+ const k=getKeyframeState(currentIndex,video.currentTime);if(!k)return;
+ const s=settings();s.zoom=k.zoom;s.rotation=k.rotation;s.opacity=k.opacity;applyVisualSettings();
+}
+
+function applyVisualSettings(){
  const s=settings();
  video.style.filter='brightness('+s.brightness+') contrast('+s.contrast+') saturate('+s.saturation+') blur('+s.blur+'px) '+s.filter;
  video.style.transform='scale('+s.zoom+') rotate('+s.rotation+'deg) scaleX('+(s.mirror?-1:1)+')';
