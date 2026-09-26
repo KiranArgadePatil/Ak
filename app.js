@@ -57,7 +57,7 @@ function keyframeExportState(clip,time){
  return {zoom:lerp(a.zoom,b.zoom),rotation:lerp(a.rotation,b.rotation),opacity:lerp(a.opacity,b.opacity),x:lerp(a.x,b.x),y:lerp(a.y,b.y)};
 }
 function drawKeyframedVideo(ctx,video,canvas,state){
- const k=state||{zoom:1,rotation:0,opacity:1};ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,k.opacity));ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate(Number(k.rotation||0)*Math.PI/180);ctx.scale(Number(k.zoom||1),Number(k.zoom||1));ctx.drawImage(video,-canvas.width/2,-canvas.height/2,canvas.width,canvas.height);ctx.restore();
+ const k=state||{zoom:1,rotation:0,opacity:1};ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,k.opacity));ctx.translate(canvas.width/2+(Number(k.x||0)*canvas.width/100),canvas.height/2+(Number(k.y||0)*canvas.height/100));ctx.rotate(Number(k.rotation||0)*Math.PI/180);ctx.scale(Number(k.zoom||1),Number(k.zoom||1));ctx.drawImage(video,-canvas.width/2,-canvas.height/2,canvas.width,canvas.height);ctx.restore();
 }
 async function exportVideo(){
  if(!files.length){msg("आधी Photo / Video निवडा.",true);return}
