@@ -228,6 +228,15 @@ async function exportVideo(){
        ctx.globalAlpha=1;
      }else if(cs.transition==="flash" || window.transitionType==="flash"){
        ctx.fillStyle="#fff";ctx.fillRect(0,0,canvas.width,canvas.height);await new Promise(r=>setTimeout(r,120));
+     }else if(["zoom","slide","wipe","spin","blur"].includes(cs.transition||window.transitionType)){
+       const tr=cs.transition||window.transitionType;
+       for(let n=0;n<10;n++){const p=(n+1)/10;ctx.save();
+        if(tr==="zoom"){ctx.globalAlpha=p;ctx.translate(canvas.width/2,canvas.height/2);ctx.scale(.65+.35*p,.65+.35*p);ctx.translate(-canvas.width/2,-canvas.height/2)}
+        else if(tr==="slide"){ctx.globalAlpha=p;ctx.translate((1-p)*canvas.width,0)}
+        else if(tr==="wipe"){ctx.beginPath();ctx.rect(0,0,canvas.width*p,canvas.height);ctx.clip()}
+        else if(tr==="spin"){ctx.globalAlpha=p;ctx.translate(canvas.width/2,canvas.height/2);ctx.rotate((1-p)*Math.PI*.5);ctx.translate(-canvas.width/2,-canvas.height/2);ctx.scale(.75+.25*p,.75+.25*p)}
+        else {ctx.globalAlpha=p;ctx.filter="blur("+(8*(1-p))+"px)"}
+        ctx.drawImage(video,0,0,canvas.width,canvas.height);ctx.restore();await new Promise(r=>setTimeout(r,25))}
      }
    }
    first=false;
