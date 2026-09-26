@@ -45,7 +45,22 @@ function applyAudioTimeline(){const a=audioTimelineState(),d=Number(a.end??99999
 function audioBeatMarkers(){const a=audioTimelineState();if(!Array.isArray(a.beats))a.beats=[];return a.beats}
 async 
 
-function openCaptionEditor(){tools.innerHTML='<b>📝 Captions</b><button id="autoCaptionDraft">✨ Auto Caption Track</button><button id="addCaptionPrompt">＋ Add Caption</button><button id="splitCaption">✂️ Split at Playhead</button><label>Style <select id="capSize"><option value="24">Small</option><option value="34" selected>Medium</option><option value="46">Large</option></select></label><small>Browser-only draft caption track; speech-to-text can be connected later.</small>';document.getElementById("autoCaptionDraft").onclick=autoCaptionDraft;document.getElementById("addCaptionPrompt").onclick=addCaptionFromPrompt;document.getElementById("splitCaption").onclick=splitCaptionAtPlayhead;document.getElementById("capSize").onchange=e=>{const c=typeof settings==="function"?settings():{};c.captionStyle=c.captionStyle||{};c.captionStyle.size=Number(e.target.value);renderCaptions()}}
+
+async function speechToTextCaptions(){
+ if(!files.length){msg("आधी video जोडा.",true);return}
+ const f=files[currentIndex]||files[0];
+ if(!f||!f.type.startsWith("video/")){msg("Video clip निवडा.",true);return}
+ const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
+ if(!SR){msg("या browser मध्ये Speech Recognition उपलब्ध नाही.",true);return}
+ const rec=new SR();rec.lang=(navigator.language||"mr-IN");rec.continuous=true;rec.interimResults=false;
+ const start=Number((clipSettings[currentIndex]||{}).trimStart||0),cEnd=Number((clipSettings[currentIndex]||{}).trimEnd||0);
+ const base=Number.isFinite(cEnd)&&cEnd>start?cEnd:(f.duration||30),captions=captionState();let heard=0;
+ rec.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){const r=e.results[i];if(!r.isFinal)continue;const text=r[0].transcript.trim();if(!text)continue;const now=typeof video!=="undefined"?Number(video.currentTime||0):start;const st=Math.max(start,now-.1);captions.push({text,start:st,end:Math.min(base,st+Math.max(1.5,Math.min(4,text.length/12)))});heard++}captions.sort((a,b)=>a.start-b.start);renderCaptions();renderOverlayTracks()};
+ rec.onerror=e=>msg("Speech recognition: "+e.error,true);
+ rec.onend=()=>{renderCaptions();msg("📝 Speech captions तयार ✓ "+heard+" lines")};
+ try{rec.start();msg("🎤 बोलणे ऐकत आहे… Video Play करून बोला/चालवा.")}catch(e){msg("Speech recognition सुरू झाले नाही.",true)}
+}
+function openCaptionEditor(){tools.innerHTML='<b>📝 Captions</b><button id="speechCaptions">🎤 Speech → Captions</button><button id="autoCaptionDraft">✨ Auto Caption Track</button><button id="addCaptionPrompt">＋ Add Caption</button><button id="splitCaption">✂️ Split at Playhead</button><label>Style <select id="capSize"><option value="24">Small</option><option value="34" selected>Medium</option><option value="46">Large</option></select></label><small>Browser-only draft caption track; speech-to-text can be connected later.</small>';document.getElementById("speechCaptions").onclick=speechToTextCaptions;document.getElementById("autoCaptionDraft").onclick=autoCaptionDraft;document.getElementById("addCaptionPrompt").onclick=addCaptionFromPrompt;document.getElementById("splitCaption").onclick=splitCaptionAtPlayhead;document.getElementById("capSize").onchange=e=>{const c=typeof settings==="function"?settings():{};c.captionStyle=c.captionStyle||{};c.captionStyle.size=Number(e.target.value);renderCaptions()}}
 function captionState(){const c=typeof settings==="function"?settings():{};if(!Array.isArray(c.captions))c.captions=[];return c.captions}
 function addCaption(text,start,end){const a=captionState();a.push({text:String(text||""),start:Number(start||0),end:Number(end||Number(start||0)+2)});a.sort((x,y)=>x.start-y.start);renderCaptions();renderOverlayTracks()}
 function renderCaptions(){const root=document.getElementById("overlay");if(!root)return;root.querySelectorAll(".ak-caption").forEach(x=>x.remove());const c=typeof settings==="function"?settings():{},now=typeof video!=="undefined"?Number(video.currentTime||0):0;captionState().forEach((x,i)=>{if(now<x.start||now>=x.end)return;const e=document.createElement("div");e.className="ak-caption";e.textContent=x.text;e.style.cssText="position:absolute;left:8%;right:8%;bottom:9%;text-align:center;font-size:"+(c.captionStyle?.size||34)+"px;font-family:"+(c.captionStyle?.font||"Arial")+";color:"+(c.captionStyle?.color||"#fff")+";text-shadow:2px 2px 4px #000,-2px -2px 4px #000;font-weight:700;z-index:50;pointer-events:none";root.appendChild(e)})}
