@@ -11,7 +11,7 @@ async function saveProject(){if(!files.length)return msg("आधी Photo / Vide
 function undo(){if(!history.length)return msg("Undo साठी बदल नाही.");redoHistory.push(projectState());restoreState(history.pop());msg("Undo ✓");}
 function redo(){if(!redoHistory.length)return msg("Redo साठी बदल नाही.");history.push(projectState());restoreState(redoHistory.pop());msg("Redo ✓");}
  const keyframes=[];
-const settings=()=>clipSettings[currentIndex]||(clipSettings[currentIndex]={duration:photoDuration,text:"",filter:"none",zoom:1,transition:"none",rotation:0,opacity:1,brightness:1,contrast:1,saturation:1,blur:0,mirror:false,speed:1});
+const settings=()=>clipSettings[currentIndex]||(clipSettings[currentIndex]={duration:photoDuration,text:"",filter:"none",zoom:1,transition:"none",rotation:0,opacity:1,brightness:1,contrast:1,saturation:1,blur:0,mirror:false,speed:1,speedCurve:null});
 
 const fmt=s=>!isFinite(s)?"0:00":Math.floor(s/60)+":"+String(Math.floor(s%60)).padStart(2,"0");
 const msg=(t,e=false)=>{status.textContent=t;status.style.color=e?"#ff879a":"#9fe3ad"};
@@ -28,7 +28,7 @@ function load(f){
    preview.style.backgroundImage="";
    video.src=URL.createObjectURL(f);video.style.display="block";empty.style.display="none";
    trimStart=0;trimEnd=0;
-   video.addEventListener("timeupdate",applyKeyframeState);\nvideo.onloadedmetadata=()=>{trimEnd=video.duration;renderTimeline()};
+   video.addEventListener("timeupdate",()=>{const s=settings();if(s.speedCurve)video.playbackRate=curveSpeed(s,video.currentTime,s.trimStart||0,s.trimEnd||video.duration||1);applyKeyframeState();});\nvideo.onloadedmetadata=()=>{trimEnd=video.duration;renderTimeline()};
  }
  renderTimeline();
 }
@@ -145,6 +145,15 @@ function applyKeyframeState(){
  const s=settings();s.zoom=k.zoom;s.rotation=k.rotation;s.opacity=k.opacity;applyVisualSettings();
 }
 
+function curveSpeed(s,time,start,end){
+ const c=s.speedCurve;if(!c)return s.speed||1;
+ const p=Math.max(0,Math.min(1,(time-start)/Math.max(.001,end-start)));
+ if(c==="bullet") return p<.2?0.5+(p/.2)*1.5:p<.5?2-((p-.2)/.3)*1.4:0.6+((p-.5)/.5)*0.4;
+ if(c==="montage") return p<.25?0.6+(p/.25)*1.4:p<.75?2:p<.9?2-((p-.75)/.15)*1.4:0.6+((p-.9)/.1)*0.4;
+ if(c==="jump") return p<.5?0.6:2;
+ if(c==="hero") return p<.45?0.5:1.8;
+ return s.speed||1;
+}
 function applyVisualSettings(){
  const s=settings();
  video.style.filter='brightness('+s.brightness+') contrast('+s.contrast+') saturate('+s.saturation+') blur('+s.blur+'px) '+s.filter;
@@ -186,7 +195,7 @@ function act(a){\n if(!restoringHistory) pushHistory();
  }
  if(a==="ratio")tools.innerHTML='<b>Ratio</b><button data-r="original">Original</button><button data-r="9:16">9:16 Reel</button><button data-r="1:1">1:1</button><button data-r="16:9">16:9</button>';
  if(a==="text")tools.innerHTML='<input id="txt" placeholder="Marathi / English Text लिहा"><label>Size <input id="fontSize" type="range" min="16" max="80" value="30"></label><label>Position <input id="textY" type="range" min="5" max="90" value="16"></label><button id="add">Add</button><button id="clearText">Clear</button>';
- if(a==="speed")tools.innerHTML='<b>⚡ Speed</b><button data-v=".5">0.5×</button><button data-v="1">1×</button><button data-v="1.5">1.5×</button><button data-v="2">2×</button><label>Custom <input id="speedCustom" type="range" min=".25" max="4" step=".05" value="'+settings().speed+'"></label><span id="speedVal">'+settings().speed+'×</span>';
+ if(a==="speed")tools.innerHTML='<b>⚡ Speed</b><button data-v=".5">0.5×</button><button data-v="1">1×</button><button data-v="1.5">1.5×</button><button data-v="2">2×</button><label>Custom <input id="speedCustom" type="range" min=".25" max="4" step=".05" value="'+settings().speed+'"></label><span id="speedVal">'+settings().speed+'×</span><hr><b>📈 Speed Curve</b><button data-curve="montage">Montage</button><button data-curve="bullet">Bullet</button><button data-curve="jump">Jump Cut</button><button data-curve="hero">Hero</button><button data-curve="none">Normal</button><div class="hint">Videoच्या वेळेनुसार speed आपोआप बदलतो.</div>';
  if(a==="transform")tools.innerHTML='<b>🎯 Transform</b><label>Zoom <input id="trZoom" type="range" min="1" max="3" step=".1" value="'+settings().zoom+'"></label><label>Rotation <input id="trRot" type="range" min="-180" max="180" value="'+settings().rotation+'"></label><label>Opacity <input id="trOpacity" type="range" min="0" max="1" step=".05" value="'+settings().opacity+'"></label><button id="mirrorBtn">🪞 Mirror</button>'; if(a==="adjust")tools.innerHTML='<b>🎨 Adjust</b><label>Brightness <input id="adjB" type="range" min=".3" max="2" step=".05" value="'+settings().brightness+'"></label><label>Contrast <input id="adjC" type="range" min=".3" max="2" step=".05" value="'+settings().contrast+'"></label><label>Saturation <input id="adjS" type="range" min="0" max="2" step=".05" value="'+settings().saturation+'"></label><label>Blur <input id="adjBlur" type="range" min="0" max="12" step=".5" value="'+settings().blur+'"></label>'; if(a==="zoom")tools.innerHTML='<b>🔍 Zoom</b><input id="zoom" type="range" min="1" max="2.5" step=".1" value="'+settings().zoom+'"><div class="hint">Preview मध्ये Zoom करा.</div>';
  if(a==="filter")tools.innerHTML='<button data-f="none">Original</button><button data-f="grayscale(1)">B&W</button><button data-f="sepia(1)">Sepia</button><button data-f="contrast(1.4) saturate(1.3)">Vivid</button>';
  if(a==="clipSettings")tools.innerHTML='<b>🎬 Clip Settings</b><label>Photo/Clip Duration <input id="clipDur" type="range" min="1" max="15" step=".5" value="'+settings().duration+'"></label><span id="clipDurVal">'+settings().duration+' sec</span><label>Transition <select id="clipTrans"><option value="none">None</option><option value="fade">Fade</option><option value="flash">Flash</option></select></label>';
@@ -198,7 +207,7 @@ function act(a){\n if(!restoringHistory) pushHistory();
 
 tools.onclick=e=>{\n const t=e.target; if(t.id==="addKeyframe"){keyframes.push({clip:currentIndex,time:video.currentTime,zoom:settings().zoom,rotation:settings().rotation,opacity:settings().opacity});$("#kfList").textContent="Keyframes: "+keyframes.filter(k=>k.clip===currentIndex).length;msg("Keyframe जोडला ✓")} if(t.id==="clearKeyframes"){for(let i=keyframes.length-1;i>=0;i--)if(keyframes[i].clip===currentIndex)keyframes.splice(i,1);$("#kfList").textContent="Keyframes: 0";msg("Keyframes clear ✓")}
  const t=e.target; if(t.id==="speedCustom"){settings().speed=+t.value;video.playbackRate=+t.value;$("#speedVal").textContent=t.value+"×"} if(t.id==="adjB"){settings().brightness=+t.value;applyVisualSettings()} if(t.id==="adjC"){settings().contrast=+t.value;applyVisualSettings()} if(t.id==="adjS"){settings().saturation=+t.value;applyVisualSettings()} if(t.id==="adjBlur"){settings().blur=+t.value;applyVisualSettings()}
- if(t.dataset.v && video.src){playbackSpeed=+t.dataset.v;settings().speed=playbackSpeed;video.playbackRate=playbackSpeed;msg("Speed: "+playbackSpeed+"×")}
+ if(t.dataset.v && video.src){playbackSpeed=+t.dataset.v;settings().speed=playbackSpeed;video.playbackRate=playbackSpeed;msg("Speed: "+playbackSpeed+"×")} if(t.dataset.curve){settings().speedCurve=t.dataset.curve==="none"?null:t.dataset.curve;msg("Speed Curve: "+(t.dataset.curve==="none"?"Normal":t.dataset.curve)+" ✓");}
  if(t.dataset.f!==undefined && video.src){video.style.filter=t.dataset.f;settings().filter=t.dataset.f;}
  if(t.dataset.t){window.transitionType=t.dataset.t;settings().transition=t.dataset.t;msg("Transition: "+t.dataset.t)}
  if(t.id==="trZoom"){settings().zoom=+t.value;applyVisualSettings();return} if(t.id==="trRot"){settings().rotation=+t.value;applyVisualSettings();return} if(t.id==="trOpacity"){settings().opacity=+t.value;applyVisualSettings();return} if(t.id==="mirrorBtn"){settings().mirror=!settings().mirror;applyVisualSettings();msg("Mirror "+(settings().mirror?"ON":"OFF"));return} if(t.id==="zoom"){zoom=+t.value;settings().zoom=zoom;applyVisualSettings();msg("Zoom: "+zoom+"×")}
@@ -286,7 +295,7 @@ async function exportVideo(){
      }
    }
    first=false;
-   video.play();let last=performance.now();
+   video.play();video.playbackRate=curveSpeed(cs,video.currentTime,startTime,endTime);let last=performance.now();
    await new Promise(resolve=>{
      const draw=()=>{
        if(rec.state!=="recording"){resolve();return}
