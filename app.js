@@ -39,6 +39,24 @@ function bindTrimHandles(){
   };
  });
 }
+async function addTimelineThumbs(){
+ const nodes=[...document.querySelectorAll(".clip")];
+ for(const n of nodes){
+  const i=+n.dataset.i,f=files[i];if(!f)continue;
+  try{
+   const url=URL.createObjectURL(f),can=document.createElement("canvas");can.width=96;can.height=54;const x=can.getContext("2d");
+   if(f.type.startsWith("image/")){
+    const im=new Image();im.src=url;await new Promise((r,z)=>{im.onload=r;im.onerror=z});
+    const q=Math.min(96/im.width,54/im.height),w=im.width*q,h=im.height*q;x.drawImage(im,(96-w)/2,(54-h)/2,w,h);
+   }else{
+    const v=document.createElement("video");v.src=url;v.muted=true;v.preload="metadata";await new Promise((r,z)=>{v.onloadedmetadata=r;v.onerror=z});
+    v.currentTime=Math.min(.1,Math.max(.01,(v.duration||1)/10));await new Promise(r=>v.addEventListener("seeked",r,{once:true}));
+    const q=Math.min(96/v.videoWidth,54/v.videoHeight),w=v.videoWidth*q,h=v.videoHeight*q;x.drawImage(v,(96-w)/2,(54-h)/2,w,h);
+   }
+   const img=document.createElement("img");img.className="tl-thumb";img.src=can.toDataURL("image/jpeg",.72);n.prepend(img);URL.revokeObjectURL(url);
+  }catch(e){}
+ }
+}
 function renderTimeline(){
  const track=$("#track")||timeline;
  if(!files.length){track.textContent="Media जोडल्यावर Timeline येथे दिसेल";return}
