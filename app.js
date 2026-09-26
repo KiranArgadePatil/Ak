@@ -271,6 +271,19 @@ async function exportVideo(){
  }
  rec.stop();
 }
+function applyKeyframePreview(time){
+ const list=typeof keyframes==="undefined"?[]:keyframes.filter(k=>k.clip===currentIndex).sort((a,b)=>a.time-b.time);
+ if(!list.length)return;
+ let a=list[0],b=list[list.length-1];
+ if(time<=a.time)b=a; else if(time>=b.time)a=list[list.length-1]; else{
+  for(let i=0;i<list.length-1;i++)if(time>=list[i].time&&time<=list[i+1].time){a=list[i];b=list[i+1];break}
+ }
+ const span=Math.max(.001,b.time-a.time),p=a===b?0:Math.max(0,Math.min(1,(time-a.time)/span));
+ const lerp=(x,y)=>Number(x??1)+(Number(y??x??1)-Number(x??1))*p;
+ const z=lerp(a.zoom,b.zoom),r=lerp(a.rotation,b.rotation),o=lerp(a.opacity,b.opacity);
+ video.style.transform="scale("+z+") rotate("+r+"deg)"+((settings().mirror)?" scaleX(-1)":"");
+ video.style.opacity=o;
+}
 async function playTransitionPreview(type,duration){
  const ms=Math.max(100,Math.min(2000,Number(duration||.45)*1000));
  if(!preview||!["flash","fade","zoom","slide","wipe","spin","blur"].includes(type))return;
@@ -301,7 +314,7 @@ async function playAll(){
    if(f.type.startsWith("image/")){
     video.pause();video.style.display="none";empty.style.display="none";overlay.textContent=s.text||"";
     const until=performance.now()+(s.duration||photoDuration)*1000;
-    await new Promise(r=>{const loop=()=>performance.now()>=until?r():requestAnimationFrame(loop);loop()});
+    const imageStart=performance.now();await new Promise(r=>{const loop=()=>{applyKeyframePreview((performance.now()-imageStart)/1000);if(performance.now()>=until)r();else requestAnimationFrame(loop)};loop()});
    }else{
     video.style.display="block";empty.style.display="none";video.src=url;video.load();
     await new Promise((r,x)=>{video.onloadedmetadata=r;video.onerror=x});
@@ -309,7 +322,7 @@ async function playAll(){
     video.currentTime=a;await new Promise(r=>video.addEventListener("seeked",r,{once:true}));
     overlay.textContent=s.text||"";video.style.filter=s.filter||"none";video.style.transform="scale("+(s.zoom||1)+")";
     await video.play().catch(()=>{});
-    await new Promise(resolve=>{const check=()=>video.currentTime>=b||video.ended?(video.pause(),resolve()):requestAnimationFrame(check);check()});
+    await new Promise(resolve=>{const check=()=>{applyKeyframePreview(video.currentTime);if(video.currentTime>=b||video.ended){video.pause();resolve()}else requestAnimationFrame(check)};check()});
    }
    URL.revokeObjectURL(url);
    if(i<files.length-1)await playTransitionPreview(s.transition||"none",s.transitionDuration||.45);
