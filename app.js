@@ -201,6 +201,29 @@ async function playAll(){
 }
 function selectTemplate(name){openEditor();msg("Template निवडला: "+name+" ✓");}
 document.querySelectorAll(".template-card").forEach(c=>c.addEventListener("click",()=>selectTemplate(c.dataset.template)));
+function openAdvancedFeature(feature){
+ if(!files.length){msg("आधी Photo / Video निवडा.",true);return}
+ if(feature==="colorPro"){tools.innerHTML='<b>🎨 Pro Color / HSL</b><label>Hue <input id="proHue" type="range" min="-180" max="180" value="'+Number(settings().hue||0)+'"></label><label>Saturation <input id="proSat" type="range" min="0" max="2" step=".05" value="'+Number(settings().saturation||1)+'"></label><label>Lightness <input id="proLight" type="range" min=".3" max="2" step=".05" value="'+Number(settings().lightness||1)+'"></label><label>Temperature <input id="proTemp" type="range" min="-50" max="50" value="'+Number(settings().temperature||0)+'"></label><label>Blend <select id="proBlend"><option>normal</option><option>multiply</option><option>screen</option><option>overlay</option><option>soft-light</option><option>hard-light</option><option>difference</option></select></label>';return}
+ if(feature==="audioPro"){tools.innerHTML='<b>🎵 Audio Pro</b><label>Volume <input id="proVol" type="range" min="0" max="1.5" step=".05" value="'+Number(video.volume||1)+'"></label><label>Fade In <input id="proFadeIn" type="range" min="0" max="10" step=".5" value="'+Number(musicFadeIn||0)+'"></label><label>Fade Out <input id="proFadeOut" type="range" min="0" max="10" step=".5" value="'+Number(musicFadeOut||0)+'"></label><button id="extractAudio">Extract/Use Current Video Audio</button><button id="voiceRecord">🎙️ Voice Preview</button><div class="hint">Browser-only audio cleanup मर्यादित आहे; exported AI noise reduction साठी dedicated processing engine लागेल.</div>';return}
+ if(feature==="aiTools"){tools.innerHTML='<b>✨ AI / Smart Tools</b><button id="smartReframe">Auto Reframe</button><button id="smartCaption">Auto Captions</button><button id="smartBg">Background Remove (Chroma fallback)</button><button id="smartTTS">Text to Speech</button><button id="smartStabilize">Stabilize Preview</button><div class="hint">True AI cutout, tracking, denoise आणि generative tools साठी server/model integration आवश्यक आहे.</div>';return}
+ if(feature==="templatesPro"){tools.innerHTML='<b>🎬 Templates</b><button data-template-pro="cinematic">Cinematic</button><button data-template-pro="reel">Reel</button><button data-template-pro="vlog">Vlog</button><button data-template-pro="photo">Photo Story</button><button data-template-pro="beat">Beat Sync</button>';return}
+}
+function applyProColor(){
+ const c=settings(),h=Number(c.hue||0),sat=Number(c.saturation||1),light=Number(c.lightness||1),temp=Number(c.temperature||0);
+ c.hue=h;c.saturation=sat;c.lightness=light;c.temperature=temp;
+ video.style.filter=(c.filter&&c.filter!=="none"?c.filter+" ":"")+"hue-rotate("+h+"deg) saturate("+sat+") brightness("+light+")";
+ video.style.mixBlendMode=c.blendMode||"normal";
+}
+function addSmartTemplate(name){
+ const c=settings();
+ if(name==="cinematic"){c.filter="contrast(1.15) saturate(.9)";c.saturation=.9;c.lightness=.95;c.transition="fade";c.transitionDuration=.6}
+ if(name==="reel"){c.saturation=1.2;c.lightness=1.05;c.transition="zoom";c.transitionDuration=.35}
+ if(name==="vlog"){c.saturation=1.1;c.lightness=1.05;c.transition="slide";c.transitionDuration=.4}
+ if(name==="photo"){c.saturation=1.08;c.lightness=1.03;c.transition="fade";c.transitionDuration=.5}
+ if(name==="beat"){c.saturation=1.25;c.transition="flash";c.transitionDuration=.2}
+ applyProColor();renderTransitionTracks();msg("Template preset लागू ✓");
+}
+
 document.querySelectorAll("[data-home-tool]").forEach(c=>c.addEventListener("click",()=>{openEditor();msg(c.textContent.trim()+" tool उघडला ✓")}));
 function openEditor(){const h=$("#homeScreen"),e=$("#editorScreen");if(h)h.hidden=true;if(e)e.hidden=false;}
 function openHome(){const h=$("#homeScreen"),e=$("#editorScreen");if(h)h.hidden=false;if(e)e.hidden=true;}
@@ -422,3 +445,25 @@ $("#undoBtn").onclick=undo;
 $("#redoBtn").onclick=redo;
 $("#loadProject").onclick=()=>$("#projectFile").click();
 $("#projectFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=new FileReader();rd.onload=async()=>{try{const st=JSON.parse(rd.result);pushHistory();if(Array.isArray(st.files)&&st.files.length&&st.files[0].data){files=st.files.map(x=>{const b64=x.data.split(",")[1]||"";const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);return new File([u],x.name,{type:x.type,lastModified:x.lastModified||Date.now()})});}if(st.music&&st.music.data){const b64=st.music.data.split(",")[1]||"";const bin=atob(b64),u=new Uint8Array(bin.length);for(let i=0;i<bin.length;i++)u[i]=bin.charCodeAt(i);musicFile=new File([u],st.music.name,{type:st.music.type,lastModified:st.music.lastModified||Date.now()});}restoreState(st);currentIndex=0;if(files.length)load(files[0]);renderTimeline();msg("पूर्ण Project load झाला ✓")}catch(_){msg("Project file चुकीची आहे किंवा खूप मोठी आहे.",true)}};rd.readAsText(f);e.target.value="";};
+
+document.querySelectorAll(".sidebar button[data-a]").forEach(b=>b.addEventListener("click",()=>act(b.dataset.a)));
+document.querySelectorAll(".sidebar button[data-adv]").forEach(b=>b.addEventListener("click",()=>openAdvancedFeature(b.dataset.adv)));
+document.addEventListener("input",e=>{
+ const t=e.target;
+ if(["proHue","proSat","proLight","proTemp"].includes(t.id)){if(t.id==="proHue")settings().hue=+t.value;if(t.id==="proSat")settings().saturation=+t.value;if(t.id==="proLight")settings().lightness=+t.value;if(t.id==="proTemp")settings().temperature=+t.value;applyProColor()}
+ if(t.id==="proVol"){video.volume=+t.value}
+ if(t.id==="proFadeIn")musicFadeIn=+t.value;
+ if(t.id==="proFadeOut")musicFadeOut=+t.value;
+});
+document.addEventListener("change",e=>{if(e.target.id==="proBlend"){settings().blendMode=e.target.value;applyProColor()}});
+document.addEventListener("click",e=>{
+ const t=e.target;
+ if(t.dataset.templatePro){addSmartTemplate(t.dataset.templatePro);return}
+ if(t.id==="smartReframe"){ratio="9:16";preview.style.aspectRatio="9/16";msg("Auto Reframe: 9:16 preset ✓");return}
+ if(t.id==="smartCaption"){const b=$("#captionStart");if(b)b.click();else msg("Captions panel उघडा.",true);return}
+ if(t.id==="smartBg"){settings().chroma=true;settings().chromaStrength=.8;act("chroma");msg("Background Remove: Chroma fallback ON ✓");return}
+ if(t.id==="smartTTS"){const text=settings().text||$("#txt")?.value||overlay.textContent||"";if(!text){msg("आधी Text लिहा.",true);return}if("speechSynthesis" in window){speechSynthesis.cancel();const u=new SpeechSynthesisUtterance(text);u.lang="mr-IN";speechSynthesis.speak(u);msg("Text-to-Speech preview सुरू ✓")}else msg("या browser मध्ये TTS उपलब्ध नाही.",true);return}
+ if(t.id==="smartStabilize"){settings().stabilize=true;preview.style.willChange="transform";msg("Stabilize preview mode ON ✓");return}
+ if(t.id==="extractAudio"){msg("Current video audio export pipeline मध्ये वापरला जातो ✓");return}
+ if(t.id==="voiceRecord"){const text=settings().text||"AK Video Editor voice preview";if("speechSynthesis" in window){const u=new SpeechSynthesisUtterance(text);u.lang="mr-IN";speechSynthesis.speak(u)}return}
+});
