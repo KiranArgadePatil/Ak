@@ -25,17 +25,26 @@ function load(f){
 }
 
 function renderTimeline(){
- if(!files.length){timeline.textContent="Media जोडल्यावर Timeline येथे दिसेल";return}
- let html=files.map((f,i)=>{
-   const active=i===currentIndex?" active":"";
-   return '<span class="clip'+active+'" data-i="'+i+'">'+(i+1)+" • "+f.name.slice(0,18)+'<small>'+ (f.type.startsWith("image/")?"Photo":"Video")+"</small></span>";
- }).join("");
- if(!currentImage && video.duration){
-   const cuts=[trimStart,...splitPoints,trimEnd].filter((v,i,a)=>i===0||v!==a[i-1]);
-   html+='<div class="segments">'+cuts.slice(0,-1).map((s,i)=>'<span class="segment">Segment '+(i+1)+'<small>'+fmt(s)+' → '+fmt(cuts[i+1])+'</small></span>').join("")+"</div>";
- }
- timeline.innerHTML=html;
- timeline.querySelectorAll(".clip").forEach(c=>c.onclick=()=>{currentIndex=+c.dataset.i;splitPoints=[];load(files[currentIndex])});
+ const track=$("#track")||timeline;
+ if(!files.length){track.textContent="Media जोडल्यावर Timeline येथे दिसेल";return}
+ track.innerHTML='<div class="timeline-track">'+files.map((f,i)=>{
+   const s=clipSettings[i]||settings(),active=i===currentIndex?" active":"";
+   return '<span class="clip'+active+'" draggable="true" data-i="'+i+'"><i class="handle left"></i>'+ (i+1)+" • "+f.name.slice(0,16)+'<small>'+ (f.type.startsWith("image/")?"Photo":"Video")+(f.type.startsWith("image/")?" • "+s.duration+"s":"")+'</small><i class="handle right"></i></span>';
+ }).join("")+'</div>';
+ const clips=[...track.querySelectorAll(".clip")];
+ clips.forEach(c=>{
+   c.onclick=e=>{if(e.target.classList.contains("handle"))return;currentIndex=+c.dataset.i;splitPoints=[];load(files[currentIndex]);renderTimeline()};
+   c.ondragstart=()=>{c.classList.add("dragging");window.dragClipIndex=+c.dataset.i};
+   c.ondragend=()=>{c.classList.remove("dragging");window.dragClipIndex=null};
+   c.ondragover=e=>e.preventDefault();
+   c.ondrop=e=>{
+     e.preventDefault();const from=window.dragClipIndex,to=+c.dataset.i;
+     if(from===to)return;
+     const [f]=files.splice(from,1);files.splice(to,0,f);
+     const [set]=clipSettings.splice(from,1);clipSettings.splice(to,0,set);
+     currentIndex=to;renderTimeline();load(files[currentIndex]);msg("Clip क्रम बदलला ✓");
+   };
+ });
 }
 
 document.querySelectorAll("[data-a]").forEach(b=>b.onclick=()=>act(b.dataset.a));
