@@ -100,12 +100,23 @@ async function addTimelineThumbs(){
 function renderOverlayTracks(){
  const textTrack=$("#textTrack"),stickerTrack=$("#stickerTrack"),audioTrack=$("#audioTrack"); if(!textTrack)return;
  textTrack.innerHTML="";stickerTrack.innerHTML="";audioTrack.innerHTML="";
- files.forEach((f,i)=>{const c=clipSettings[i]||{};const dur=c.duration||c.trimEnd-c.trimStart||photoDuration||5;
-  if(c.text){const x=document.createElement("div");x.className="track-item";x.style.left=(i*110)+"px";x.style.width=Math.max(70,dur*22)+"px";x.textContent=c.text;x.title="Text";textTrack.appendChild(x)}
-  if(c.sticker){const x=document.createElement("div");x.className="track-item";x.style.left=(i*110)+"px";x.style.width=Math.max(70,dur*22)+"px";x.textContent=c.sticker;x.title="Sticker";stickerTrack.appendChild(x)}
+ const pxPerSec=32;
+ files.forEach((f,i)=>{
+  const c=clipSettings[i]||{},dur=Math.max(.1,c.duration||photoDuration||5),left=files.slice(0,i).reduce((a,_,k)=>a+Math.max(.1,(clipSettings[k]||{}).duration||photoDuration||5),0);
+  const make=(track,label,type)=>{const x=document.createElement("div");x.className="track-item";x.dataset.clip=i;x.dataset.kind=type;x.style.left=(left*pxPerSec)+"px";x.style.width=Math.max(70,dur*pxPerSec)+"px";x.textContent=label;
+   x.onpointerdown=e=>{x.setPointerCapture(e.pointerId);const start=e.clientX,orig=left;const move=ev=>{const delta=(ev.clientX-start)/pxPerSec;const newLeft=Math.max(0,orig+delta);x.style.left=(newLeft*pxPerSec)+"px"};const up=ev=>{x.onpointermove=null;x.releasePointerCapture(ev.pointerId)};x.onpointermove=move;x.onpointerup=up;x.onpointercancel=up;};
+   track.appendChild(x)};
+  if(c.text)make(textTrack,"🅰️ "+c.text,"text");
+  if(c.sticker)make(stickerTrack,c.sticker,"sticker");
  });
  if(musicFile){const x=document.createElement("div");x.className="track-item";x.style.left="0";x.style.width=Math.max(120,files.length*110)+"px";x.textContent="🎵 "+musicFile.name;audioTrack.appendChild(x)}
 }
+function bindOverlayPreviewDrag(){
+ if(!overlay)return;
+ overlay.style.touchAction="none";
+ overlay.onpointerdown=e=>{if(!overlay.textContent)return;overlay.setPointerCapture(e.pointerId);const sx=e.clientX,sy=e.clientY,ox=textY,oy=textSize;const move=ev=>{textY=Math.max(0,Math.min(90,oy+(ev.clientY-sy)/4));overlay.style.top=textY+"%";overlay.style.left=Math.max(5,Math.min(95,50+(ev.clientX-sx)/4))+"%"};const up=()=>{overlay.onpointermove=null};overlay.onpointermove=move;overlay.onpointerup=up;overlay.onpointercancel=up};
+}
+
 function renderTimeline(){
  const track=$("#track")||timeline;
  if(!files.length){track.textContent="Media जोडल्यावर Timeline येथे दिसेल";return}
@@ -260,7 +271,7 @@ $("#music").onchange=e=>{
  musicFile=e.target.files[0];
  if(musicFile){musicInfo.innerHTML='<div class="music">🎵 '+musicFile.name+' <button id="removeMusic">×</button><label>Music volume <input id="musicVol" type="range" min="0" max="1" step=".05" value=".7"></label></div>';msg("Music जोडले.")}
 };
-renderOverlayTracks();
+renderOverlayTracks();bindOverlayPreviewDrag();
 musicInfo.onclick=e=>{if(e.target.id==="removeMusic"){musicFile=null;musicInfo.innerHTML="";msg("Music काढले.")}};
 
 function mimeType(){
