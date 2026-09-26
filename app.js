@@ -81,7 +81,7 @@ function renderTransitionTracks(){
   const c=clipSettings[i]||{};
   const type=c.transition||"none"; if(type==="none")continue;
   const left=files.slice(0,i).reduce((a,_,k)=>a+Math.max(.1,(clipSettings[k]||{}).duration||photoDuration||5),0);
-  const x=document.createElement("div");x.className="transition-marker";x.dataset.clip=i;x.style.left=(left*pxPerSec-10)+"px";x.textContent="↔ "+type+" "+Number(c.transitionDuration||.45).toFixed(1)+"s";lane.appendChild(x);
+  const x=document.createElement("div");x.className="transition-marker";x.dataset.clip=i;x.style.left=(left*pxPerSec-10)+"px";x.textContent="↔ "+type+" "+Number(c.transitionDuration||.45).toFixed(1)+"s";x.title="Drag to change duration";x.style.pointerEvents="auto";x.style.touchAction="none";x.onpointerdown=e=>{e.stopPropagation();x.setPointerCapture(e.pointerId);const sx=e.clientX,start=Number(c.transitionDuration||.45);x.onpointermove=m=>{const d=(m.clientX-sx)/pxPerSec;c.transitionDuration=Math.max(.1,Math.min(2,Math.round((start+d)*10)/10));x.textContent="↔ "+type+" "+c.transitionDuration.toFixed(1)+"s"};x.onpointerup=x.onpointercancel=()=>{x.onpointermove=null;x.onpointerup=null;x.onpointercancel=null;renderTransitionTracks()}};lane.appendChild(x);
  }
 }
 function drawStickerObjectsExport(ctx,canvas,c,time){
