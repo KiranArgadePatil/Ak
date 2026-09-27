@@ -977,3 +977,39 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   window.akBindTimelineScrub=bind;
   window.addEventListener("load",()=>setTimeout(bind,700));
 })();
+
+
+/* AK TIMELINE ZOOM + SCROLL v1 */
+(function(){
+  let scale=1;
+  function bind(){
+    const el=document.getElementById("track"); if(!el||el.dataset.zoomBound)return;
+    el.dataset.zoomBound="1";
+    const host=el.parentElement;
+    if(host){host.style.overflowX="auto";host.style.overflowY="visible";host.style.webkitOverflowScrolling="touch";}
+    const controls=document.createElement("div");
+    controls.className="ak-timeline-zoom";
+    controls.innerHTML='<button type="button" id="akTlMinus">−</button><input id="akTlZoom" type="range" min="0.5" max="3" step="0.1" value="1"><button type="button" id="akTlPlus">+</button><span id="akTlZoomVal">100%</span>';
+    el.parentElement&&el.parentElement.insertBefore(controls,el);
+    const apply=()=>{
+      const z=Math.max(.5,Math.min(3,scale));
+      el.style.setProperty("--ak-timeline-scale",z);
+      el.querySelectorAll(".clip-block").forEach(b=>{b.style.width=(parseFloat(b.dataset.baseWidth||"130")*z)+"px"});
+      const inp=controls.querySelector("#akTlZoom"),val=controls.querySelector("#akTlZoomVal");
+      if(inp)inp.value=z;if(val)val.textContent=Math.round(z*100)+"%";
+      if(typeof akUpdateTimelinePlayhead==="function")akUpdateTimelinePlayhead();
+    };
+    controls.querySelector("#akTlMinus").onclick=()=>{scale=Math.max(.5,scale-.1);apply()};
+    controls.querySelector("#akTlPlus").onclick=()=>{scale=Math.min(3,scale+.1);apply()};
+    controls.querySelector("#akTlZoom").oninput=e=>{scale=Number(e.target.value)||1;apply()};
+    window.akTimelineZoom=apply;
+  }
+  window.akBindTimelineZoom=bind;
+  window.addEventListener("load",()=>setTimeout(bind,900));
+  const old=window.renderTimeline;
+  if(typeof old==="function")window.renderTimeline=function(){
+    const r=old.apply(this,arguments);
+    setTimeout(()=>{const el=document.getElementById("track");if(el){el.querySelectorAll(".clip-block").forEach(b=>{if(!b.dataset.baseWidth)b.dataset.baseWidth=parseFloat(b.style.width)||130})}bind();if(typeof akTimelineZoom==="function")akTimelineZoom()},0);
+    return r;
+  };
+})();
