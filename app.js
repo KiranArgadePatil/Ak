@@ -829,14 +829,17 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
       const ks=(Array.isArray(keyframes)?keyframes:[]).filter(k=>k.clip===i);
       ks.forEach(k=>{
         const m=document.createElement("button");m.type="button";m.className="ak-kf-marker";m.textContent="◆";
-        const max=Math.max(.01,dur),rel=Math.max(0,Math.min(1,Number(k.time||0)/max));
+        const fIsImage=f&&f.type&&f.type.startsWith("image/");
+        const minTime=fIsImage?0:Number(c.trimStart||0),maxTime=fIsImage?dur:Math.max(minTime,Number(c.trimEnd??(f&&f.duration)||dur));
+        const span=Math.max(.01,maxTime-minTime);
+        const rel=Math.max(0,Math.min(1,(Number(k.time||0)-minTime)/span));
         m.style.left=(rel*100)+"%";m.title="Keyframe "+Number(k.time||0).toFixed(2)+"s";
-        m.onclick=e=>{e.stopPropagation();selectedKeyframe=k;showKeyframeEditor(k);applyKeyframePreview(k.time)};
+        m.onclick=e=>{e.stopPropagation();currentIndex=i;selectedKeyframe=k;showKeyframeEditor(k);applyKeyframePreview(k.time)};
         m.onpointerdown=e=>{
-          e.stopPropagation();e.preventDefault();m.setPointerCapture(e.pointerId);
-          const rect=b.getBoundingClientRect(),startX=e.clientX,old=Number(k.time||0),scale=Math.max(.01,dur/Math.max(1,rect.width));
-          const move=q=>{const nt=Math.max(0,Math.min(dur,old+(q.clientX-startX)*scale));k.time=nt;m.style.left=(nt/dur*100)+"%";if(selectedKeyframe===k)applyKeyframePreview(nt)};
-          const up=()=>{m.removeEventListener("pointermove",move);m.removeEventListener("pointerup",up);keyframes.sort((a,b)=>a.clip-b.clip||a.time-b.time);renderOverlayTracks();msg("◆ Keyframe time बदलला ✓")};
+          e.stopPropagation();e.preventDefault();m.setPointerCapture(e.pointerId);selectedKeyframe=k;currentIndex=i;
+          const rect=b.getBoundingClientRect(),startX=e.clientX,old=Number(k.time||minTime),scale=span/Math.max(1,rect.width);
+          const move=q=>{const nt=Math.max(minTime,Math.min(maxTime,old+(q.clientX-startX)*scale));k.time=nt;m.style.left=(((nt-minTime)/span)*100)+"%";if(selectedKeyframe===k)applyKeyframePreview(nt)};
+          const up=()=>{m.removeEventListener("pointermove",move);m.removeEventListener("pointerup",up);keyframes.sort((a,b)=>a.clip-b.clip||a.time-b.time);showKeyframeEditor(k);renderOverlayTracks();msg("◆ Keyframe time बदलला ✓")};
           m.addEventListener("pointermove",move);m.addEventListener("pointerup",up);
         };
         lane.appendChild(m);
