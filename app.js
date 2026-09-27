@@ -1642,3 +1642,69 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   };
   window.addEventListener("load",()=>setTimeout(installButton,900));
 })();
+
+
+
+/* AK FILTERS + COLOR ADJUSTMENT v1 */
+(function(){
+  const FILTERS={
+    original:"none",
+    portrait:"contrast(1.04) saturate(1.08) brightness(1.03)",
+    landscape:"saturate(1.25) contrast(1.08)",
+    food:"saturate(1.38) contrast(1.06) brightness(1.02)",
+    sunset:"sepia(.10) saturate(1.30) hue-rotate(-8deg) brightness(1.04)",
+    mono:"grayscale(1) contrast(1.12)",
+    faded:"contrast(.90) saturate(.78) brightness(1.05)",
+    teal:"saturate(1.15) hue-rotate(10deg) contrast(1.05)",
+    dramatic:"contrast(1.28) saturate(1.12) brightness(.94)"
+  };
+  function c(){return typeof settings==="function"?settings():{}}
+  function apply(){
+    const x=c(),f=FILTERS[x.filterPreset||"original"]||FILTERS.original;
+    x.filterPreset=x.filterPreset||"original";
+    x.filter=f;
+    if(typeof video!=="undefined"&&video.style)video.style.filter=f;
+    try{if(typeof saveProject==="function")saveProject()}catch(_){}
+  }
+  function open(){
+    if(typeof tools==="undefined")return;
+    let h='<b>🎞️ Filters + Color</b><small>Filter निवडा आणि खाली color controls वापरा</small>';
+    h+='<div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px;margin:8px 0">';
+    Object.keys(FILTERS).forEach(k=>h+='<button type="button" data-ak-filter="'+k+'" style="padding:8px 4px;border:1px solid #596274;border-radius:8px;background:#202633;color:#fff;font-size:11px">'+k+'</button>');
+    h+='</div>';
+    const x=c();
+    h+='<label>☀️ Brightness <input id="akColorB" type="range" min="-100" max="100" value="'+Number(x.brightness??0)+'"></label><span id="akColorBVal">'+Number(x.brightness??0)+'</span>';
+    h+='<label>◐ Contrast <input id="akColorC" type="range" min="-100" max="100" value="'+Number(x.contrast??0)+'"></label><span id="akColorCVal">'+Number(x.contrast??0)+'</span>';
+    h+='<label>🌈 Saturation <input id="akColorS" type="range" min="-100" max="100" value="'+Number(x.saturation??0)+'"></label><span id="akColorSVal">'+Number(x.saturation??0)+'</span>';
+    h+='<label>🌡️ Hue <input id="akColorH" type="range" min="-180" max="180" value="'+Number(x.hue??0)+'"></label><span id="akColorHVal">'+Number(x.hue??0)+'°</span>';
+    h+='<label>💡 Lightness <input id="akColorL" type="range" min="-100" max="100" value="'+Number(x.lightness??0)+'"></label><span id="akColorLVal">'+Number(x.lightness??0)+'</span>';
+    h+='<label>🌫️ Blur <input id="akColorBlur" type="range" min="0" max="12" step=".5" value="'+Number(x.blur??0)+'"></label><span id="akColorBlurVal">'+Number(x.blur??0)+'</span>';
+    h+='<button type="button" id="akColorReset">↺ Reset Color</button><button type="button" id="akColorBack">← Back</button>';
+    tools.innerHTML=h;
+    tools.querySelectorAll("[data-ak-filter]").forEach(b=>b.onclick=()=>{x.filterPreset=b.dataset.akFilter;apply();open()});
+    const ids=[["akColorB","brightness","akColorBVal"],["akColorC","contrast","akColorCVal"],["akColorS","saturation","akColorSVal"],["akColorH","hue","akColorHVal"],["akColorL","lightness","akColorLVal"],["akColorBlur","blur","akColorBlurVal"]];
+    ids.forEach(a=>{
+      const el=document.getElementById(a[0]);el.oninput=()=>{
+        x[a[1]]=Number(el.value);document.getElementById(a[2]).textContent=el.value+(a[1]==="hue"?"°":"");
+        if(typeof applyVisualSettings==="function")applyVisualSettings();
+        else apply();
+      };
+    });
+    document.getElementById("akColorReset").onclick=()=>{
+      ["brightness","contrast","saturation","hue","lightness","blur"].forEach(k=>x[k]=0);
+      x.filterPreset="original";x.filter="none";
+      if(typeof applyVisualSettings==="function")applyVisualSettings();else apply();
+      open();
+    };
+    document.getElementById("akColorBack").onclick=()=>{try{if(typeof act==="function")act("adjust")}catch(_){}};
+  }
+  window.openFiltersColorPanel=open;
+  window.akFilterPresets=FILTERS;
+  function install(){
+    if(typeof tools==="undefined"||!tools.parentElement||document.getElementById("akFiltersColorBtn"))return;
+    const b=document.createElement("button");b.id="akFiltersColorBtn";b.type="button";b.textContent="🎞️ Filters / Color";
+    b.style.cssText="margin:4px;padding:7px 10px;border:1px solid #596274;border-radius:8px;cursor:pointer";
+    b.onclick=open;tools.parentElement.insertBefore(b,tools);
+  }
+  window.addEventListener("load",()=>setTimeout(install,1000));
+})();
