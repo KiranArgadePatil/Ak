@@ -939,3 +939,41 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
     window.renderTimeline=function(){const r=oldRender.apply(this,arguments);setTimeout(bind,0);return r};
   }
 })();
+
+
+/* AK TIMELINE SCRUB v1 */
+(function(){
+  function bind(){
+    const el=document.getElementById("track"); if(!el||el.dataset.scrubBound)return;
+    el.dataset.scrubBound="1";
+    let active=false;
+    const seek=e=>{
+      const b=e.target.closest(".clip-block"); if(!b)return;
+      const idx=Number(b.dataset.index); if(!Number.isFinite(idx)||!files[idx])return;
+      const rect=b.getBoundingClientRect();
+      const ratio=Math.max(0,Math.min(1,(e.clientX-rect.left)/Math.max(1,rect.width)));
+      if(typeof currentIndex!=="undefined"&&currentIndex!==idx){
+        currentIndex=idx;
+        try{if(typeof loadFile==="function")loadFile(idx)}catch(_){}
+      }
+      const c=(clipSettings&&clipSettings[idx])||{},f=files[idx],start=Number(c.trimStart||0);
+      const dur=f.type&&f.type.startsWith("image/")?Number(c.duration||photoDuration||3):Math.max(.01,Number(c.trimEnd??f.duration||3)-start);
+      const t=start+ratio*dur;
+      if(f.type&&f.type.startsWith("image/")){window.photoPreviewTime=t;try{if(typeof renderPreview==="function")renderPreview()}catch(_){}}
+      else if(typeof video!=="undefined"&&video){try{video.currentTime=t}catch(_){}}
+      if(typeof applyKeyframePreview==="function")try{applyKeyframePreview(t)}catch(_){}
+      if(typeof akUpdateTimelinePlayhead==="function")akUpdateTimelinePlayhead();
+    };
+    el.addEventListener("pointerdown",e=>{
+      if(e.target.closest(".ak-kf-marker,.clip-block button,input,select"))return;
+      if(!e.target.closest(".clip-block"))return;
+      active=true; try{el.setPointerCapture(e.pointerId)}catch(_){}
+      seek(e);
+    });
+    el.addEventListener("pointermove",e=>{if(active)seek(e)});
+    const stop=()=>{active=false};
+    el.addEventListener("pointerup",stop);el.addEventListener("pointercancel",stop);el.addEventListener("lostpointercapture",stop);
+  }
+  window.akBindTimelineScrub=bind;
+  window.addEventListener("load",()=>setTimeout(bind,700));
+})();
