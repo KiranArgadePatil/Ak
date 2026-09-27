@@ -884,7 +884,7 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   function clipLen(i){
     const f=files&&files[i],c=(clipSettings&&clipSettings[i])||{};
     if(f&&f.type&&f.type.startsWith("image/"))return Math.max(.25,Number(c.duration||photoDuration||3));
-    const a=Number(c.trimStart||0),b=Number(c.trimEnd??(f&&f.duration)||0);
+    const a=Number(c.trimStart||0),b=Number(c.trimEnd ?? ((f&&f.duration)||0));
     return Math.max(.25,b>a?b-a:Number(f&&f.duration||3));
   }
   function draw(){
