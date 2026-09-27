@@ -644,7 +644,7 @@ window.renderKeyframeTracks=window.renderKeyframeTracks||function(){
         const up=()=>{document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",up);pushHistory();msg("Keyframe time बदलला ✓")};
         document.addEventListener("pointermove",move);document.addEventListener("pointerup",up);
       };
-      m.onclick=ev=>{ev.stopPropagation();selectedKeyframe=k;video.currentTime=Math.max(0,Math.min(dur,k.time));msg("Keyframe "+(idx+1)+" select ✓")};
+      m.onclick=ev=>{ev.stopPropagation();selectedKeyframe=k;video.currentTime=Math.max(0,Math.min(dur,k.time));["Zoom","Rotation","Opacity","X","Y"].forEach(n=>{const q=document.getElementById("kf"+n);if(q)q.value=k[n.toLowerCase()]??(n==="Zoom"?1:n==="Opacity"?1:0)});msg("Keyframe "+(idx+1)+" select ✓")};
       el.appendChild(m);
     });
     el.dataset.keyframes=String(list.length);
