@@ -1299,7 +1299,7 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   window.akSplitClipAtPlayhead=function(index,time){
     const i=Number(index),t=Number(time);
     if(!Array.isArray(files)||!files[i]||!Number.isFinite(t))return false;
-    const c=(clipSettings&&clipSettings[i])||{},start=Number(c.trimStart||0),end=Number(c.trimEnd??files[i].duration||0);
+    const c=(clipSettings&&clipSettings[i])||{},start=Number(c.trimStart||0),end=Number(c.trimEnd ?? (files[i].duration||0));
     if(t<=start+.01||t>=end-.01)return false;
     try{if(typeof pushHistory==="function")pushHistory()}catch(_){}
     const left=Object.assign({},c,{trimEnd:t});
