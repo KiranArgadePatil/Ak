@@ -1197,3 +1197,31 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
     const r=old.apply(this,arguments);setTimeout(refresh,0);return r;
   };
 })();
+
+
+/* AK TIMELINE SNAP GRID v1 */
+(function(){
+  window.akSnapTimelineOffset=function(value,step){
+    const st=Math.max(.01,Number(step||0.25));
+    return Math.max(0,Math.round(Number(value||0)/st)*st);
+  };
+  window.akTimelineSnapStep=0.25;
+  function bind(){
+    const lanes=document.getElementById("akMultiTrackLanes");if(!lanes||lanes.dataset.snapBound)return;
+    lanes.dataset.snapBound="1";
+    let info=document.getElementById("akSnapInfo");
+    if(!info){
+      info=document.createElement("span");info.id="akSnapInfo";info.textContent="Snap 0.25s";
+      info.style.cssText="font-size:10px;opacity:.7;margin-left:6px";
+      const host=lanes.parentElement;if(host)host.insertBefore(info,lanes);
+    }
+  }
+  window.addEventListener("load",()=>setTimeout(bind,2000));
+  const old=window.akBindMultiTrackDrag;
+  if(typeof old==="function"){
+    window.akBindMultiTrackDrag=function(){
+      const r=old.apply(this,arguments);
+      return r;
+    };
+  }
+})();
