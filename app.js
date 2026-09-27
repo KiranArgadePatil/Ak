@@ -794,3 +794,38 @@ function pushHistory(){
   };
 
 })();
+
+
+/* AK SAFE KEYFRAME PREVIEW v1 — live interpolation + editor */
+var selectedKeyframe=typeof selectedKeyframe!=="undefined"?selectedKeyframe:null;
+function applyKeyframePreview(time){
+  if(!Array.isArray(keyframes)||!files.length)return;
+  const clip=currentIndex, f=files[clip];
+  const t=Number(time||0), k=keyframeExportState(clip,t);
+  const c=(typeof clipSettings!=="undefined"&&clipSettings[clip])||{};
+  const state=k||{zoom:Number(c.zoom||1),rotation:Number(c.rotation||0),opacity:Number(c.opacity??1),x:Number(c.x||0),y:Number(c.y||0)};
+  const v=document.getElementById("video");
+  if(v){
+    v.style.transform="translate("+Number(state.x||0)+"px,"+Number(state.y||0)+"px) scale("+Number(state.zoom||1)+") rotate("+Number(state.rotation||0)+"deg)"+(c.mirror?" scaleX(-1)":"");
+    v.style.opacity=Math.max(0,Math.min(1,Number(state.opacity??1)));
+  }
+  const o=document.getElementById("overlay");
+  if(o){o.dataset.kfZoom=String(state.zoom);o.dataset.kfRotation=String(state.rotation);o.dataset.kfOpacity=String(state.opacity)}
+  return state;
+}
+function showKeyframeEditor(k){
+  if(!k)return;
+  selectedKeyframe=k;
+  const z=Number(k.zoom??1),r=Number(k.rotation||0),op=Number(k.opacity??1),tm=Number(k.time||0);
+  tools.innerHTML='<b>🎯 Keyframe Editor</b>'+
+    '<label>Time <input id="kfTime" type="range" min="0" max="'+Math.max(0.1,Number((clipSettings[currentIndex]||{}).duration||video.duration||5))+'" step="0.01" value="'+tm+'"></label>'+
+    '<label>Zoom <input id="kfZoom" type="range" min="1" max="3" step="0.1" value="'+z+'"> <span id="kfZoomVal">'+z.toFixed(1)+'x</span></label>'+
+    '<label>Rotation <input id="kfRotation" type="range" min="-180" max="180" step="1" value="'+r+'"> <span id="kfRotationVal">'+r.toFixed(0)+'°</span></label>'+
+    '<label>Opacity <input id="kfOpacity" type="range" min="0" max="1" step="0.01" value="'+op+'"> <span id="kfOpacityVal">'+Math.round(op*100)+'%</span></label>'+
+    '<button id="kfJump">▶ Jump</button><button id="kfDuplicate">＋ Duplicate</button><button id="kfDelete">🗑 Delete</button><button id="kfBack">← Back</button>';
+}
+if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
+  video.dataset.kfPreviewBound="1";
+  video.addEventListener("timeupdate",()=>{try{applyKeyframePreview(video.currentTime)}catch(e){}});
+  video.addEventListener("seeked",()=>{try{applyKeyframePreview(video.currentTime)}catch(e){}});
+}
