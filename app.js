@@ -1759,3 +1759,33 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   window.openProfessionalTextEditor=open;
   window.addEventListener("load",()=>setTimeout(()=>{if(typeof tools!=="undefined"&&tools.parentElement&&!document.getElementById("akProfessionalTextBtn")){const b=document.createElement("button");b.id="akProfessionalTextBtn";b.type="button";b.textContent="✍️ Text Pro";b.style.cssText="margin:4px;padding:7px 10px;border:1px solid #596274;border-radius:8px;cursor:pointer";b.onclick=open;tools.parentElement.insertBefore(b,tools)}},1100));
 })();
+
+
+/* AK RIPPLE TIMELINE v1 */
+(function(){
+  window.akApplyRipple=function(index,delta){
+    const i=Number(index),d=Number(delta);
+    if(!Array.isArray(clipSettings)||!Number.isFinite(i)||!Number.isFinite(d)||!d)return;
+    for(let j=i+1;j<clipSettings.length;j++){
+      const c=clipSettings[j]||{};
+      c.timelineOffset=Math.max(0,Number(c.timelineOffset||0)+d);
+      clipSettings[j]=c;
+    }
+    try{if(typeof akRefreshMultiTrackPositions==="function")akRefreshMultiTrackPositions()}catch(_){}
+    try{if(typeof renderTimeline==="function")renderTimeline()}catch(_){}
+  };
+  window.akRippleEnabled=true;
+  function bind(){
+    const lanes=document.getElementById("akMultiTrackLanes");if(!lanes||lanes.dataset.rippleBound)return;
+    lanes.dataset.rippleBound="1";
+    let bar=document.getElementById("akRippleControl");
+    if(!bar){
+      bar=document.createElement("label");bar.id="akRippleControl";
+      bar.style.cssText="display:inline-flex;align-items:center;gap:4px;font-size:11px;margin-left:8px";
+      bar.innerHTML='<input type="checkbox" id="akRippleToggle" checked> Ripple';
+      const host=lanes.parentElement;if(host)host.insertBefore(bar,lanes);
+      bar.querySelector("input").onchange=e=>window.akRippleEnabled=e.target.checked;
+    }
+  }
+  window.addEventListener("load",()=>setTimeout(bind,2900));
+})();
