@@ -481,13 +481,54 @@ function autoCaptionFromCurrentVideo(){
  const SR=window.SpeechRecognition||window.webkitSpeechRecognition;
  if(!SR){msg("Speech Recognition या browser मध्ये उपलब्ध नाही.",true);return}
  if(typeof video==="undefined"||!video.src){msg("आधी video preview मध्ये लोड करा.",true);return}
- const rec=new SR();rec.continuous=true;rec.interimResults=false;rec.maxAlternatives=1;rec.lang=navigator.language||"mr-IN";
- let activeStart=Number(video.currentTime||0),count=0;
- rec.onstart=()=>msg("🎤 Auto Caption listening…");
- rec.onresult=e=>{for(let i=e.resultIndex;i<e.results.length;i++){if(!e.results[i].isFinal)continue;const text=e.results[i][0].transcript.trim();if(!text)continue;const end=Math.max(activeStart+.8,Number(video.currentTime||activeStart+2));captionState().push({text,start:activeStart,end});activeStart=end;count++}captionState().sort((a,b)=>a.start-b.start);renderCaptions();renderOverlayTracks()};
+ if(window.__akCaptionRecognition){try{window.__akCaptionRecognition.stop()}catch(e){}}
+ const rec=new SR();
+ rec.continuous=true;rec.interimResults=false;rec.maxAlternatives=1;
+ const lang=prompt("Caption भाषा निवडा: mr-IN = मराठी, hi-IN = हिंदी, en-IN = English",navigator.language||"mr-IN")||"mr-IN";
+ rec.lang=lang;
+ let activeStart=Number(video.currentTime||0),count=0,stream=null,track=null;
+ const pushResult=(text,endHint)=>{
+   const clean=String(text||"").trim(); if(!clean)return;
+   const end=Math.max(activeStart+.8,Number(endHint||activeStart+Math.max(1.5,Math.min(4,clean.length/12))));
+   captionState().push({text:clean,start:activeStart,end});
+   activeStart=end;count++;
+   captionState().sort((a,b)=>a.start-b.start);renderCaptions();renderOverlayTracks()
+ };
+ rec.onstart=()=>msg("🎤 Auto Caption सुरू ✓ — "+lang);
+ rec.onresult=e=>{
+   for(let i=e.resultIndex;i<e.results.length;i++){
+     const result=e.results[i]; if(!result.isFinal)continue;
+     const text=result[0]&&result[0].transcript;
+     const now=Number(video.currentTime||activeStart+2);
+     pushResult(text,now);
+   }
+ };
  rec.onerror=e=>msg("Caption error: "+e.error,true);
- rec.onend=()=>{renderCaptions();msg("📝 Auto Captions तयार ✓ "+count+" lines")};
- try{rec.start()}catch(e){msg("Auto Caption सुरू झाले नाही.",true)}
+ rec.onend=()=>{
+   try{if(track)track.stop()}catch(e){}
+   try{if(stream)stream.getTracks().forEach(t=>t.stop())}catch(e){}
+   window.__akCaptionRecognition=null;
+   renderCaptions();renderOverlayTracks();
+   msg("📝 Auto Captions तयार ✓ "+count+" lines");
+ };
+ window.__akCaptionRecognition=rec;
+ try{
+   if(typeof video.captureStream==="function"){
+     stream=video.captureStream();
+     track=stream.getAudioTracks()[0]||null;
+     if(track) rec.start(track); else rec.start();
+   }else if(typeof video.mozCaptureStream==="function"){
+     stream=video.mozCaptureStream();
+     track=stream.getAudioTracks()[0]||null;
+     if(track) rec.start(track); else rec.start();
+   }else{
+     rec.start();
+   }
+   msg("🎤 Audio recognition सुरू… Video Play करा.");
+ }catch(e){
+   window.__akCaptionRecognition=null;
+   msg("Auto Caption सुरू झाले नाही: "+(e.message||e),true);
+ }
 }
 function clearAllCaptions(){const c=typeof settings==="function"?settings():{};c.captions=[];renderCaptions();renderOverlayTracks();msg("🗑️ Captions cleared")}
 function applyChromaKeyFrame(srcCanvas,targetCtx,targetCanvas,threshold=85){try{targetCtx.clearRect(0,0,targetCanvas.width,targetCanvas.height);targetCtx.drawImage(srcCanvas,0,0,targetCanvas.width,targetCanvas.height);const im=targetCtx.getImageData(0,0,targetCanvas.width,targetCanvas.height),d=im.data,t=Math.max(20,Number(threshold)||85);for(let i=0;i<d.length;i+=4){const rr=d[i],gg=d[i+1],bb=d[i+2],mx=Math.max(rr,gg,bb),mn=Math.min(rr,gg,bb);if(gg>rr*1.18&&gg>bb*1.18&&(gg-mn)>t)d[i+3]=0}targetCtx.putImageData(im,0,0)}catch(e){console.warn("chroma frame",e)}}
