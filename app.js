@@ -566,3 +566,31 @@ async function aiVideoBackgroundPreview(){if(!files.length){msg("आधी video
 async function aiBackgroundRemove(){if(!files.length){msg("आधी photo/video जोडा.",true);return}if(!window.bodySegmentation){msg("AI segmentation library लोड झाली नाही.",true);return}try{msg("🤖 AI Background Removal model तयार होत आहे…");const model=bodySegmentation.SupportedModels.MediaPipeSelfieSegmentation;const seg=await bodySegmentation.createSegmenter(model,{runtime:"mediapipe",solutionPath:"https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation",modelType:"general"});const f=files[currentIndex]||files[0];if(f.type.startsWith("image/")){const img=new Image();img.src=URL.createObjectURL(f);await new Promise((res,rej)=>{img.onload=res;img.onerror=rej});const c=document.createElement("canvas");c.width=img.naturalWidth;c.height=img.naturalHeight;const x=c.getContext("2d");x.drawImage(img,0,0);const people=await seg.segmentPeople(c);const mask=await bodySegmentation.toBinaryMask(people);const out=document.createElement("canvas");out.width=c.width;out.height=c.height;const o=out.getContext("2d");o.drawImage(c,0,0);const id=o.getImageData(0,0,out.width,out.height),md=mask.data||mask;for(let i=0,p=0;i<id.data.length;i+=4,p+=4){if(md[p]===0)id.data[i+3]=0}o.putImageData(id,0,0);const blob=await new Promise(r=>out.toBlob(r,"image/png"));const nf=new File([blob],"AI-removed-"+f.name.replace(/\.[^.]+$/,"")+".png",{type:"image/png"});files[currentIndex]=nf;loadFile(nf,currentIndex);msg("🤖 AI Background Removed ✓")}else{msg("AI segmentation तयार आहे; video preview साठी frame-by-frame processing पुढच्या export pipeline मध्ये जोडता येईल.",true)}try{seg.dispose()}catch(e){}}catch(e){console.error(e);msg("AI Background Removal failed — Chroma Key वापरा.",true)}}
 function chromaBackgroundRemove(){if(!files.length){msg("आधी media जोडा.",true);return}const c=typeof settings==="function"?settings():{};c.backgroundRemove="chroma";c.chromaEnabled=true;msg("🪄 Background Remove: Chroma Key mode ✓ — green/blue background निवडा")}
 function openMultiTrackEditor(){tools.innerHTML='<b>🎚️ Multi-track</b><button id="mtRefresh">↻ Refresh Tracks</button><button id="mtDuplicate">＋ Duplicate Clip</button><button id="mtEarlier">← Move Earlier</button><small>Video, Text, Sticker, Audio, Caption आणि Effect tracks वेगळे दिसतात.</small>';document.getElementById("mtRefresh").onclick=()=>{multiTrackClipInfo();renderOverlayTracks()};document.getElementById("mtDuplicate").onclick=duplicateCurrentClipToTrack;document.getElementById("mtEarlier").onclick=moveCurrentClipEarlier;multiTrackClipInfo()}
+
+/* AK LIVE KEYFRAME PREVIEW */
+(function(){
+  if(window.__akLiveKeyframeBound)return;
+  window.__akLiveKeyframeBound=true;
+  document.addEventListener("input",function(e){
+    const ids={kfZoom:"zoom",kfRotation:"rotation",kfOpacity:"opacity",kfX:"x",kfY:"y"};
+    const key=ids[e.target&&e.target.id]; if(!key||!window.selectedKeyframe)return;
+    const k=window.selectedKeyframe;
+    k[key]=Number(e.target.value);
+    try{
+      const c=typeof settings==="function"?settings():null;
+      if(c){
+        if(key==="zoom")c.zoom=k.zoom;
+        if(key==="rotation")c.rotation=k.rotation;
+        if(key==="opacity")c.opacity=k.opacity;
+        if(key==="x")c.x=k.x;
+        if(key==="y")c.y=k.y;
+      }
+      if(typeof applyVisualSettings==="function")applyVisualSettings();
+      else if(typeof window.applyVisualSettings==="function")window.applyVisualSettings();
+    }catch(err){}
+  });
+  document.addEventListener("change",function(e){
+    if(!/^kf(Zoom|Rotation|Opacity|X|Y)$/.test(e.target&&e.target.id)||!window.selectedKeyframe)return;
+    try{if(typeof renderKeyframeTracks==="function")renderKeyframeTracks()}catch(err){}
+  });
+})();
