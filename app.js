@@ -565,3 +565,63 @@ async function aiVideoBackgroundPreview(){if(!files.length){msg("आधी video
 async function aiBackgroundRemove(){if(!files.length){msg("आधी photo/video जोडा.",true);return}if(!window.bodySegmentation){msg("AI segmentation library लोड झाली नाही.",true);return}try{msg("🤖 AI Background Removal model तयार होत आहे…");const model=bodySegmentation.SupportedModels.MediaPipeSelfieSegmentation;const seg=await bodySegmentation.createSegmenter(model,{runtime:"mediapipe",solutionPath:"https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation",modelType:"general"});const f=files[currentIndex]||files[0];if(f.type.startsWith("image/")){const img=new Image();img.src=URL.createObjectURL(f);await new Promise((res,rej)=>{img.onload=res;img.onerror=rej});const c=document.createElement("canvas");c.width=img.naturalWidth;c.height=img.naturalHeight;const x=c.getContext("2d");x.drawImage(img,0,0);const people=await seg.segmentPeople(c);const mask=await bodySegmentation.toBinaryMask(people);const out=document.createElement("canvas");out.width=c.width;out.height=c.height;const o=out.getContext("2d");o.drawImage(c,0,0);const id=o.getImageData(0,0,out.width,out.height),md=mask.data||mask;for(let i=0,p=0;i<id.data.length;i+=4,p+=4){if(md[p]===0)id.data[i+3]=0}o.putImageData(id,0,0);const blob=await new Promise(r=>out.toBlob(r,"image/png"));const nf=new File([blob],"AI-removed-"+f.name.replace(/\.[^.]+$/,"")+".png",{type:"image/png"});files[currentIndex]=nf;loadFile(nf,currentIndex);msg("🤖 AI Background Removed ✓")}else{msg("AI segmentation तयार आहे; video preview साठी frame-by-frame processing पुढच्या export pipeline मध्ये जोडता येईल.",true)}try{seg.dispose()}catch(e){}}catch(e){console.error(e);msg("AI Background Removal failed — Chroma Key वापरा.",true)}}
 function chromaBackgroundRemove(){if(!files.length){msg("आधी media जोडा.",true);return}const c=typeof settings==="function"?settings():{};c.backgroundRemove="chroma";c.chromaEnabled=true;msg("🪄 Background Remove: Chroma Key mode ✓ — green/blue background निवडा")}
 function openMultiTrackEditor(){tools.innerHTML='<b>🎚️ Multi-track</b><button id="mtRefresh">↻ Refresh Tracks</button><button id="mtDuplicate">＋ Duplicate Clip</button><button id="mtEarlier">← Move Earlier</button><small>Video, Text, Sticker, Audio, Caption आणि Effect tracks वेगळे दिसतात.</small>';document.getElementById("mtRefresh").onclick=()=>{multiTrackClipInfo();renderOverlayTracks()};document.getElementById("mtDuplicate").onclick=duplicateCurrentClipToTrack;document.getElementById("mtEarlier").onclick=moveCurrentClipEarlier;multiTrackClipInfo()}
+\n
+/* AK EDITOR COMPLETION PACK v1 — core stability + remaining editor features */
+(function(){
+  const AKH="ak-video-editor-autosave-v1";
+  function akSettings(){
+    if(typeof clipSettings==="undefined") return {};
+    if(!clipSettings[currentIndex]) clipSettings[currentIndex]={};
+    return clipSettings[currentIndex];
+  }
+  window.settings=window.settings||akSettings;
+  window.applyVisualSettings=window.applyVisualSettings||function(){
+    const c=akSettings(),v=document.getElementById("video"); if(!v)return;
+    const b=Number(c.brightness??1),co=Number(c.contrast??1),s=Number(c.saturation??1),h=Number(c.hue??0),l=Number(c.lightness??1),bl=Number(c.blur??0);
+    let f=(c.filter&&c.filter!=="none"?c.filter+" ":"")+"brightness("+b+") contrast("+co+") saturate("+s+") hue-rotate("+h+"deg) brightness("+l+")";
+    if(bl>0) f+=" blur("+bl+"px)";
+    v.style.filter=f;
+    v.style.transform="translate("+(Number(c.x||0))+"px,"+(Number(c.y||0))+"px) scale("+Number(c.zoom||1)+") rotate("+Number(c.rotation||0)+"deg)"+(c.mirror?" scaleX(-1)":"");
+    v.style.opacity=Number(c.opacity??1);
+    v.style.mixBlendMode=c.blendMode||"normal";
+  };
+  window.applyMaskPreview=window.applyMaskPreview||function(){
+    const c=akSettings(),v=document.getElementById("video"); if(!v)return;
+    const m=c.mask||"none";
+    v.style.clipPath=m==="circle"?"circle(46% at 50% 50%)":m==="rect"?"inset(3% 3% 3% 3% round 4%)":"none";
+  };
+  window.saveProject=window.saveProject||async function(){
+    const payload={version:2,createdAt:new Date().toISOString(),ratio,photoDuration,files:[],music:null,clipSettings,keyframes,splitPoints,exportConfig};
+    for(const f of (files||[])){payload.files.push({name:f.name,type:f.type,size:f.size,lastModified:f.lastModified,data:await new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(f)})});}
+    if(typeof musicFile!=="undefined"&&musicFile)payload.music={name:musicFile.name,type:musicFile.type,size:musicFile.size,lastModified:musicFile.lastModified,data:await new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(musicFile)})};
+    const blob=new Blob([JSON.stringify(payload)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="AK-Video-Project.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
+    try{localStorage.setItem(AKH,JSON.stringify({...payload,files:[],music:null}))}catch(e){}
+    msg("💾 Project Save झाला ✓");
+  };
+  window.undo=window.undo||function(){if(typeof historyStack==="undefined"||!historyStack.length){msg("Undo साठी बदल उपलब्ध नाही.",true);return}try{redoStack.push(captureState());const st=historyStack.pop();restoringHistory=true;restoreState(st);restoringHistory=false;renderTimeline();renderOverlayTracks();applyVisualSettings();applyMaskPreview();msg("↶ Undo ✓")}catch(e){restoringHistory=false;msg("Undo लागू झाले नाही.",true)}};
+  window.redo=window.redo||function(){if(typeof redoStack==="undefined"||!redoStack.length){msg("Redo साठी बदल उपलब्ध नाही.",true);return}try{historyStack.push(captureState());const st=redoStack.pop();restoringHistory=true;restoreState(st);restoringHistory=false;renderTimeline();renderOverlayTracks();applyVisualSettings();applyMaskPreview();msg("↷ Redo ✓")}catch(e){restoringHistory=false;msg("Redo लागू झाले नाही.",true)}};
+  function applyTextAnimation(){
+    const o=document.getElementById("overlay"),c=akSettings();if(!o)return;
+    o.classList.remove("ak-ta-pop","ak-ta-fade","ak-ta-slide","ak-ta-zoom","ak-ta-bounce");
+    const n=String(c.textAnimation||"none");if(n!=="none")o.classList.add("ak-ta-"+n);
+  }
+  function refreshCompletionUI(){
+    const t=document.getElementById("tools");if(!t)return;
+    const b=document.createElement("div");b.className="ak-completion-panel";
+    b.innerHTML='<b>🚀 Advanced</b><button data-ak-action="save-local">💾 Auto Save</button><button data-ak-action="clear-local">🗑️ Clear Auto Save</button><button data-ak-action="text-presets">🅰️ Text Animation</button><button data-ak-action="mask-presets">🎭 Mask</button><button data-ak-action="speed-curves">⏩ Speed Curve</button>';
+    t.appendChild(b);
+  }
+  document.addEventListener("click",e=>{
+    const a=e.target.closest("[data-ak-action]")?.dataset.akAction;if(!a)return;
+    if(a==="save-local"){try{localStorage.setItem(AKH,JSON.stringify({version:2,ratio,photoDuration,clipSettings,keyframes,splitPoints,exportConfig,savedAt:new Date().toISOString()}));msg("💾 Auto Save ✓")}catch(x){msg("Auto Save failed.",true)}}
+    if(a==="clear-local"){localStorage.removeItem(AKH);msg("Auto Save clear ✓")}
+    if(a==="text-presets"){const n=prompt("Text animation: none / pop / fade / slide / zoom / bounce",akSettings().textAnimation||"pop");if(n&&["none","pop","fade","slide","zoom","bounce"].includes(n)){akSettings().textAnimation=n;applyTextAnimation();msg("🅰️ Text Animation: "+n+" ✓")}}
+    if(a==="mask-presets"){const n=prompt("Mask: none / circle / rect",akSettings().mask||"none");if(n&&["none","circle","rect"].includes(n)){akSettings().mask=n;applyMaskPreview();msg("🎭 Mask: "+n+" ✓")}}
+    if(a==="speed-curves"){const n=prompt("Speed Curve: normal / montage / hero / bullet / jump / flash / smooth",akSettings().speedCurvePreset||"smooth");if(n){setSpeedCurvePreset(n);applySpeedCurvePreview()}}
+  });
+  if(typeof video!=="undefined"){
+    video.addEventListener("timeupdate",()=>{try{applySpeedCurvePreview();applyTextAnimation()}catch(e){}});
+    video.addEventListener("loadedmetadata",()=>{try{applyVisualSettings();applyMaskPreview()}catch(e){}});
+  }
+  window.addEventListener("load",()=>setTimeout(refreshCompletionUI,300));
+})();
