@@ -575,6 +575,30 @@ async function aiBackgroundRemove(){if(!files.length){msg("आधी photo/video
 function chromaBackgroundRemove(){if(!files.length){msg("आधी media जोडा.",true);return}const c=typeof settings==="function"?settings():{};c.backgroundRemove="chroma";c.chromaEnabled=true;msg("🪄 Background Remove: Chroma Key mode ✓ — green/blue background निवडा")}
 function openMultiTrackEditor(){tools.innerHTML='<b>🎚️ Multi-track</b><button id="mtRefresh">↻ Refresh Tracks</button><button id="mtDuplicate">＋ Duplicate Clip</button><button id="mtEarlier">← Move Earlier</button><small>Video, Text, Sticker, Audio, Caption आणि Effect tracks वेगळे दिसतात.</small>';document.getElementById("mtRefresh").onclick=()=>{multiTrackClipInfo();renderOverlayTracks()};document.getElementById("mtDuplicate").onclick=duplicateCurrentClipToTrack;document.getElementById("mtEarlier").onclick=moveCurrentClipEarlier;multiTrackClipInfo()}
 \n
+/* AK HISTORY STABILITY — undo/redo state helpers */
+var historyStack=typeof historyStack!=="undefined"?historyStack:[];
+var redoStack=typeof redoStack!=="undefined"?redoStack:[];
+var restoringHistory=typeof restoringHistory!=="undefined"?restoringHistory:false;
+function captureState(){
+  const clone=v=>{try{return JSON.parse(JSON.stringify(v))}catch(e){return v}};
+  return {clipSettings:clone(typeof clipSettings!=="undefined"?clipSettings:[]),keyframes:clone(typeof keyframes!=="undefined"?keyframes:[]),splitPoints:clone(typeof splitPoints!=="undefined"?splitPoints:[]),currentIndex:typeof currentIndex!=="undefined"?currentIndex:0,ratio:typeof ratio!=="undefined"?ratio:"16:9",photoDuration:typeof photoDuration!=="undefined"?photoDuration:5};
+}
+function restoreState(st){
+  if(!st)return;
+  if(typeof clipSettings!=="undefined"&&st.clipSettings)clipSettings=JSON.parse(JSON.stringify(st.clipSettings));
+  if(typeof keyframes!=="undefined"&&st.keyframes)keyframes=JSON.parse(JSON.stringify(st.keyframes));
+  if(typeof splitPoints!=="undefined"&&st.splitPoints)splitPoints=JSON.parse(JSON.stringify(st.splitPoints));
+  if(typeof currentIndex!=="undefined"&&Number.isFinite(Number(st.currentIndex)))currentIndex=Number(st.currentIndex);
+  if(typeof ratio!=="undefined"&&st.ratio)ratio=st.ratio;
+  if(typeof photoDuration!=="undefined"&&st.photoDuration)photoDuration=Number(st.photoDuration);
+}
+function pushHistory(){
+  if(restoringHistory)return;
+  historyStack.push(captureState());
+  if(historyStack.length>30)historyStack.shift();
+  redoStack.length=0;
+}
+
 /* AK EDITOR COMPLETION PACK v1 — core stability + remaining editor features */
 (function(){
   const AKH="ak-video-editor-autosave-v1";
