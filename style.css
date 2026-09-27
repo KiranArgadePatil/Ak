@@ -6,3 +6,19 @@
 .transition-marker{position:absolute;top:50%;transform:translate(-50%,-50%);z-index:5;background:#303746;border:1px solid #596274;border-radius:12px;padding:3px 7px;font-size:9px;color:#dce2ef;white-space:nowrap;pointer-events:none}
 
 .keyframe-marker{position:absolute;top:72%;transform:translate(-50%,-50%) rotate(45deg);width:12px;height:12px;background:#ffd54a;border:1px solid #7a6500;border-radius:2px;z-index:7;cursor:grab;box-sizing:border-box}.keyframe-marker::after{content:"";display:block;width:100%;height:100%;transform:rotate(-45deg)}
+
+/* Advanced completion UI */
+.ak-completion-panel{width:100%;display:flex;gap:7px;flex-wrap:wrap;align-items:center;padding:8px;border:1px solid #303746;border-radius:9px;background:#0d1017}
+.ak-completion-panel b{color:#cfc5ff;margin-right:3px}
+.ak-completion-panel button{font-size:11px;padding:7px 9px}
+.ak-ta-pop{animation:akPop .35s ease both}
+.ak-ta-fade{animation:akFade .55s ease both}
+.ak-ta-slide{animation:akSlide .5s ease both}
+.ak-ta-zoom{animation:akZoom .5s ease both}
+.ak-ta-bounce{animation:akBounce .7s ease both}
+@keyframes akPop{0%{opacity:0;transform:scale(.65)}100%{opacity:1;transform:scale(1)}}
+@keyframes akFade{0%{opacity:0}100%{opacity:1}}
+@keyframes akSlide{0%{opacity:0;transform:translateY(35px)}100%{opacity:1;transform:translateY(0)}}
+@keyframes akZoom{0%{opacity:0;transform:scale(1.5)}100%{opacity:1;transform:scale(1)}}
+@keyframes akBounce{0%{opacity:0;transform:translateY(-35px)}55%{opacity:1;transform:translateY(8px)}75%{transform:translateY(-4px)}100%{transform:translateY(0)}}
+@media(max-width:700px){.ak-completion-panel{gap:5px}.ak-completion-panel button{padding:7px 8px}}
