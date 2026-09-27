@@ -1506,7 +1506,7 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
     if(typeof currentIndex!=="undefined")currentIndex=Math.max(0,Math.min(currentIndex,files.length-1));
     try{if(typeof saveProject==="function")saveProject()}catch(_){}
     try{if(typeof renderTimeline==="function")renderTimeline()}catch(_){}
-    try{if(typeof akRenderMultiTrackLanes==="function"){setTimeout(akRenderMultiTrackLanes,0)}catch(_){}
+    try{if(typeof akRenderMultiTrackLanes==="function"){setTimeout(akRenderMultiTrackLanes,0)}}catch(_){ }
     return true;
   };
   function bind(){
