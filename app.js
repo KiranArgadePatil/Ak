@@ -1107,3 +1107,30 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   const old=window.renderTimeline;
   if(typeof old==="function")window.renderTimeline=function(){const r=old.apply(this,arguments);setTimeout(renderLanes,0);return r};
 })();
+
+
+/* AK MULTI TRACK SAFETY FIX v1 */
+(function(){
+  const old=window.akRenderMultiTrackLanes;
+  window.akRenderMultiTrackLanes=function(){
+    try{
+      if(typeof old==="function")old();
+    }catch(e){
+      const lanes=document.getElementById("akMultiTrackLanes"); if(!lanes)return;
+      const host=document.getElementById("track"); if(!host)return;
+      const filesSafe=Array.isArray(window.files)?window.files:[];
+      lanes.innerHTML="";
+      ["VIDEO 1","VIDEO 2","TEXT","AUDIO"].forEach(name=>{
+        const row=document.createElement("div");row.dataset.track=name;
+        row.style.cssText="position:relative;min-height:34px;border:1px solid rgba(128,128,128,.22);border-radius:5px;overflow:hidden";
+        const label=document.createElement("div");label.textContent=name;
+        label.style.cssText="position:absolute;left:4px;top:8px;font-size:10px;font-weight:700;opacity:.7;z-index:3";
+        const content=document.createElement("div");content.style.cssText="margin-left:58px;min-height:34px;display:flex;align-items:center;gap:3px;overflow:hidden";
+        if(name==="VIDEO 1")filesSafe.forEach((f,i)=>{const b=document.createElement("div");b.textContent=(f.name||("Clip "+(i+1))).slice(0,18);b.dataset.index=i;b.style.cssText="height:25px;min-width:90px;padding:5px 7px;box-sizing:border-box;border:1px solid rgba(128,128,128,.35);border-radius:4px;font-size:10px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis";content.appendChild(b)});
+        else{const b=document.createElement("div");b.textContent=name==="VIDEO 2"?"PIP / Overlay":name==="TEXT"?"Text layer":"Audio layer";b.style.cssText="height:25px;min-width:100px;padding:5px 7px;border-radius:4px;border:1px dashed rgba(128,128,128,.35);font-size:10px";content.appendChild(b)}
+        row.append(label,content);lanes.appendChild(row);
+      });
+    }
+  };
+  window.addEventListener("load",()=>setTimeout(()=>window.akRenderMultiTrackLanes(),1500));
+})();
