@@ -578,6 +578,30 @@ function openMultiTrackEditor(){tools.innerHTML='<b>🎚️ Multi-track</b><butt
 /* AK EDITOR COMPLETION PACK v1 — core stability + remaining editor features */
 (function(){
   const AKH="ak-video-editor-autosave-v1";
+  window.renderTimeline=window.renderTimeline||function(){
+    const el=document.getElementById("track");if(!el)return;
+    const list=Array.isArray(files)?files:[];
+    if(!list.length){el.textContent="Media जोडल्यावर Timeline येथे दिसेल";return;}
+    el.innerHTML="";
+    list.forEach((f,i)=>{
+      const c=(typeof clipSettings!=="undefined"&&clipSettings[i])||{};
+      const b=document.createElement("div");b.className="clip-block";b.dataset.clip=i;
+      b.textContent=(i===currentIndex?"▶ ":"")+((f&&f.name)||("Clip "+(i+1)));
+      b.title="Clip "+(i+1)+" • "+(Number(c.trimStart||0).toFixed(1))+"s–"+(c.trimEnd!=null?Number(c.trimEnd).toFixed(1):"end");
+      b.onclick=()=>{currentIndex=i;try{load(f)}catch(e){try{loadFile(f,i)}catch(x){}}};
+      el.appendChild(b);
+    });
+    if(Array.isArray(splitPoints)&&splitPoints.length){const m=document.createElement("small");m.textContent="✂ Split: "+splitPoints.map(x=>fmt(x)).join(" • ");el.appendChild(m)}
+  };
+  window.renderKeyframeTracks=window.renderKeyframeTracks||function(){
+    const el=document.getElementById("track");if(!el||!Array.isArray(keyframes))return;
+    const n=keyframes.filter(k=>k.clip===currentIndex).length;
+    el.dataset.keyframes=n;
+  };
+  window.renderTransitionTracks=window.renderTransitionTracks||function(){
+    const el=document.getElementById("track");if(!el)return;
+    el.dataset.transition=String((typeof settings==="function"?settings():{}).transition||"none");
+  };
   function akSettings(){
     if(typeof clipSettings==="undefined") return {};
     if(!clipSettings[currentIndex]) clipSettings[currentIndex]={};
