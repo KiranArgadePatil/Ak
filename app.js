@@ -10,7 +10,7 @@ tools.onclick=e=>{
  if(t.id==="clearText"){overlay.textContent="";settings().text="";renderOverlayTracks();}
  if(t.id==="applyTrim"){
    const s=parseFloat($("#ts").value),en=parseFloat($("#te").value);
-   if(s>=0&&en>s&&en<=(currentImage?5:video.duration)){trimStart=s;trimEnd=en;if(video.src)video.currentTime=s;renderTimeline();renderKeyframeTracks();msg("Trim सेट: "+fmt(s)+" → "+fmt(en))}
+   if(s>=0&&en>s&&en<=(currentImage?5:video.duration)){trimStart=s;trimEnd=en;const cs=(typeof clipSettings!=="undefined"&&clipSettings[currentIndex])||(typeof settings==="function"?settings():null);if(cs){cs.trimStart=s;cs.trimEnd=en}if(video.src)video.currentTime=s;renderTimeline();renderKeyframeTracks();renderTransitionTracks&&renderTransitionTracks();msg("Trim सेट: "+fmt(s)+" → "+fmt(en))}
    else msg("Start/End चुकीचे आहेत.",true)
  }
  if(t.id==="addSplit"){
