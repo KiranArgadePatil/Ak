@@ -336,7 +336,7 @@ async function exportVideo(){
  const oldSrc=video.src,oldTime=video.currentTime,oldDisplay=video.style.display;
  const canvas=document.createElement("canvas");
  if(ratio==="9:16"){canvas.width=exportConfig.width===720?720:1080;canvas.height=exportConfig.width===720?1280:1920}else if(ratio==="1:1"){canvas.width=exportConfig.width===720?720:1080;canvas.height=canvas.width}else if(ratio==="16:9"){canvas.width=exportConfig.width;canvas.height=exportConfig.width===720?405:608}else{canvas.width=exportConfig.width;canvas.height=Math.round(exportConfig.width*(video.videoHeight||720)/(video.videoWidth||1280))}
- const ctx=canvas.getContext("2d"),stream=canvas.captureStream(30);
+ const ctx=canvas.getContext("2d"),stream=canvas.captureStream(exportConfig.fps||30);const pipExportLayers=await preparePIPExport();let pipProjectTime=0;
  let audioCtx=null,dest=null,vs=null,musicEl=null;
  try{
    audioCtx=new(window.AudioContext||window.webkitAudioContext)();dest=audioCtx.createMediaStreamDestination();
@@ -348,7 +348,7 @@ async function exportVideo(){
  rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
  rec.onstop=()=>{
    const blob=new Blob(chunks,{type:mime}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="AK-Video-"+Date.now()+"."+extFor(mime);a.click();
-   if(audioCtx)audioCtx.close();if(musicEl)musicEl.pause();
+   if(audioCtx)audioCtx.close();if(musicEl){musicEl.pause();try{if(musicEl.src)URL.revokeObjectURL(musicEl.src)}catch(e){}}cleanupPIPExport(pipExportLayers);
    if(oldSrc){video.src=oldSrc;video.currentTime=oldTime} video.style.display=oldDisplay;msg("Multi-Clip Export पूर्ण झाले ✅");
  };
  if(audioCtx)await audioCtx.resume();if(musicEl)musicEl.play().catch(()=>{});
@@ -364,7 +364,7 @@ async function exportVideo(){
    if(f.type.startsWith("image/")){
      const img=new Image();img.src=url;await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject});
      const until=performance.now()+(cs.duration||photoDuration)*1000;
-     await new Promise(resolve=>{const drawPhoto=()=>{ctx.fillStyle="#000";ctx.fillRect(0,0,canvas.width,canvas.height);const src=img.width/img.height,dst=canvas.width/canvas.height;let dw=canvas.width,dh=canvas.height,dx=0,dy=0;if(src>dst){dh=canvas.height;dw=dh*src;dx=(canvas.width-dw)/2}else{dw=canvas.width;dh=dw/src;dy=(canvas.height-dh)/2}ctx.drawImage(img,dx,dy,dw,dh);if(overlay.textContent){ctx.font=Math.max(textSize,canvas.width*.055)+"px system-ui";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.strokeStyle="#000";ctx.lineWidth=7;ctx.strokeText(overlay.textContent,canvas.width/2,canvas.height*textY/100);ctx.fillText(overlay.textContent,canvas.width/2,canvas.height*textY/100)}if(performance.now()>=until){resolve();return}requestAnimationFrame(drawPhoto)};requestAnimationFrame(drawPhoto)});URL.revokeObjectURL(url);first=false;continue;
+     await new Promise(resolve=>{const drawPhoto=()=>{ctx.fillStyle="#000";ctx.fillRect(0,0,canvas.width,canvas.height);const src=img.width/img.height,dst=canvas.width/canvas.height;let dw=canvas.width,dh=canvas.height,dx=0,dy=0;if(src>dst){dh=canvas.height;dw=dh*src;dx=(canvas.width-dw)/2}else{dw=canvas.width;dh=dw/src;dy=(canvas.height-dh)/2}ctx.drawImage(img,dx,dy,dw,dh);if(overlay.textContent){ctx.font=Math.max(textSize,canvas.width*.055)+"px system-ui";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.strokeStyle="#000";ctx.lineWidth=7;ctx.strokeText(overlay.textContent,canvas.width/2,canvas.height*textY/100);ctx.fillText(overlay.textContent,canvas.width/2,canvas.height*textY/100)}drawPIPLayersExport(ctx,canvas,pipExportLayers,pipProjectTime);if(performance.now()>=until){resolve();return}requestAnimationFrame(drawPhoto)};requestAnimationFrame(drawPhoto)});pipProjectTime+=Math.max(.25,Number(cs.duration||photoDuration||3));URL.revokeObjectURL(url);first=false;continue;
    }
    startTime=Math.max(0,cs.trimStart??0);endTime=Math.min(video.duration,cs.trimEnd??video.duration)
    video.currentTime=startTime;await new Promise(r=>video.addEventListener("seeked",r,{once:true}));
@@ -389,12 +389,15 @@ async function exportVideo(){
        if(src>dst){dh=canvas.height;dw=dh*src;dx=(canvas.width-dw)/2}else{dw=canvas.width;dh=dw/src;dy=(canvas.height-dh)/2}
        ctx.filter=video.style.filter||"none";ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.scale(zoom,zoom);ctx.drawImage(video,dx-canvas.width/2,dy-canvas.height/2,dw,dh);ctx.restore();ctx.filter="none";
        if(overlay.textContent){ctx.font=Math.max(textSize,canvas.width*.055)+"px system-ui";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.strokeStyle="#000";ctx.lineWidth=7;ctx.strokeText(overlay.textContent,canvas.width/2,canvas.height*.16);ctx.fillText(overlay.textContent,canvas.width/2,canvas.height*.16)}
+       drawPIPLayersExport(ctx,canvas,pipExportLayers,pipProjectTime+(video.currentTime-startTime));
        if(video.currentTime>=endTime||video.ended){video.pause();resolve();return}
        requestAnimationFrame(draw)
      };requestAnimationFrame(draw)
    });
+   pipProjectTime+=Math.max(0,endTime-startTime);
    URL.revokeObjectURL(url);
  }
+ cleanupPIPExport(pipExportLayers);
  rec.stop();
 }
 async function playAll(){
