@@ -158,6 +158,15 @@ let exportConfig={width:1280,height:720,fps:30,bitrate:6000000};
 function multiTrackClipInfo(){const rows=document.querySelectorAll("#overlayTracks .track-row");rows.forEach((r,i)=>{r.dataset.trackIndex=i;r.style.minHeight="36px";const body=r.querySelector("div");if(body){body.style.minHeight="30px";body.style.position="relative";body.style.overflowX="auto"}});msg("🎚️ Multi-track layout सक्रिय ✓")}
 function duplicateCurrentClipToTrack(){if(!files.length){msg("आधी media जोडा.",true);return}const i=currentIndex,f=files[i];files.push(f);const src=clipSettings[i]||{},copy=JSON.parse(JSON.stringify(src));clipSettings.push(copy);currentIndex=files.length-1;renderOverlayTracks();msg("➕ Clip duplicate करून नवीन track तयार ✓")}
 function moveCurrentClipEarlier(){if(currentIndex<=0){msg("हा clip आधीच पहिला आहे.",true);return}const i=currentIndex;[files[i-1],files[i]]=[files[i],files[i-1]];[clipSettings[i-1],clipSettings[i]]=[clipSettings[i],clipSettings[i-1]];currentIndex=i-1;renderOverlayTracks();msg("↔️ Track clip order बदलला ✓")}
+function bestRecorderOptions(profile){
+ const p=profile||{},fps=Number(p.fps||30),q=p.quality||"high";
+ const types=["video/mp4;codecs=avc1.42E01E,mp4a.40.2","video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];
+ let preferred="";
+ if(p.format==="mp4")preferred=types.find(x=>x.startsWith("video/mp4")&&MediaRecorder.isTypeSupported(x))||"";
+ if(!preferred)preferred=types.find(x=>MediaRecorder.isTypeSupported(x))||"";
+ const bitrate=q==="low"?3500000:q==="medium"?5000000:8000000;
+ return {mimeType:preferred||undefined,videoBitsPerSecond:bitrate,frameRate:fps};
+}
 function getExportProfile(){const c=typeof settings==="function"?settings():{};return c.exportProfile||{format:"auto",fps:30,quality:"high"}}
 function createRecorder(stream){const p=getExportProfile(),o=bestRecorderOptions(p);try{return new MediaRecorder(stream,o)}catch(e){try{return new MediaRecorder(stream)}catch(x){throw x}}}
 function exportProfileStatus(){const p=getExportProfile(),o=bestRecorderOptions(p);msg("📤 "+(o.mimeType||"browser default")+" • "+(p.fps||30)+"fps • "+(p.quality||"high"))}
