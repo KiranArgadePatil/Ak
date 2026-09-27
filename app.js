@@ -1176,3 +1176,24 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   const old=window.akRenderMultiTrackLanes;
   if(typeof old==="function")window.akRenderMultiTrackLanes=function(){const r=old.apply(this,arguments);setTimeout(bind,0);return r};
 })();
+
+
+/* AK MULTI TRACK POSITION RENDER v2 */
+(function(){
+  function refresh(){
+    const lanes=document.getElementById("akMultiTrackLanes"); if(!lanes)return;
+    const row=lanes.querySelector('[data-track="VIDEO 1"]'); if(!row)return;
+    const content=row.querySelector("div:nth-child(2)"); if(!content)return;
+    content.querySelectorAll("[data-index]").forEach(b=>{
+      const i=Number(b.dataset.index), c=(clipSettings&&clipSettings[i])||{};
+      const off=Math.max(0,Number(c.timelineOffset||0));
+      b.style.marginLeft=(off*32)+"px";
+    });
+  }
+  window.akRefreshMultiTrackPositions=refresh;
+  window.addEventListener("load",()=>setTimeout(refresh,1900));
+  const old=window.akRenderMultiTrackLanes;
+  if(typeof old==="function")window.akRenderMultiTrackLanes=function(){
+    const r=old.apply(this,arguments);setTimeout(refresh,0);return r;
+  };
+})();
