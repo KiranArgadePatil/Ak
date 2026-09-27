@@ -573,7 +573,7 @@ function openMultiTrackEditor(){tools.innerHTML='<b>🎚️ Multi-track</b><butt
   window.__akLiveKeyframeBound=true;
   document.addEventListener("input",function(e){
     const ids={kfZoom:"zoom",kfRotation:"rotation",kfOpacity:"opacity",kfX:"x",kfY:"y"};
-    const key=ids[e.target&&e.target.id]; if(!key||!window.selectedKeyframe)return;
+    const key=ids[e.target&&e.target.id]; if(!key||typeof selectedKeyframe==="undefined"||!selectedKeyframe)return;
     const k=window.selectedKeyframe;
     k[key]=Number(e.target.value);
     try{
