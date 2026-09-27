@@ -904,3 +904,38 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   if(typeof video!=="undefined")video.addEventListener("timeupdate",update);
   window.addEventListener("load",()=>setTimeout(update,900));
 })();
+
+
+/* AK TIMELINE SEEK v1 */
+(function(){
+  function bind(){
+    const el=document.getElementById("track"); if(!el||el.dataset.seekBound)return;
+    el.dataset.seekBound="1";
+    el.addEventListener("pointerdown",function(e){
+      if(e.target.closest(".ak-kf-marker,.clip-block button,input,select"))return;
+      const b=e.target.closest(".clip-block"); if(!b)return;
+      const idx=Number(b.dataset.index);
+      if(!Number.isFinite(idx))return;
+      const rect=b.getBoundingClientRect(), ratio=Math.max(0,Math.min(1,(e.clientX-rect.left)/Math.max(1,rect.width)));
+      if(typeof currentIndex!=="undefined")currentIndex=idx;
+      const f=files[idx],c=(clipSettings&&clipSettings[idx])||{};
+      const start=Number(c.trimStart||0);
+      const dur=f&&f.type&&f.type.startsWith("image/")?Number(c.duration||photoDuration||3):Math.max(.01,Number(c.trimEnd??(f&&f.duration)||3)-start);
+      const t=start+ratio*dur;
+      if(f&&f.type&&f.type.startsWith("image/")){
+        window.photoPreviewTime=t;
+        if(typeof renderPreview==="function")try{renderPreview()}catch(_){}
+      }else if(typeof video!=="undefined"&&video){
+        try{video.currentTime=t}catch(_){}
+      }
+      if(typeof renderTimeline==="function")try{renderTimeline()}catch(_){}
+      if(typeof akUpdateTimelinePlayhead==="function")akUpdateTimelinePlayhead();
+    });
+  }
+  window.akBindTimelineSeek=bind;
+  window.addEventListener("load",()=>setTimeout(bind,500));
+  const oldRender=window.renderTimeline;
+  if(typeof oldRender==="function"){
+    window.renderTimeline=function(){const r=oldRender.apply(this,arguments);setTimeout(bind,0);return r};
+  }
+})();
