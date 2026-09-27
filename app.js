@@ -1535,3 +1535,32 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   const old=window.renderTimeline;
   if(typeof old==="function")window.renderTimeline=function(){const r=old.apply(this,arguments);setTimeout(decorate,0);return r};
 })();
+
+
+/* AK CLIP PASTE BUTTON v1 */
+(function(){
+  function ensure(){
+    const host=document.getElementById("track");if(!host)return;
+    let bar=document.getElementById("akClipPasteBar");
+    if(!bar){
+      bar=document.createElement("div");bar.id="akClipPasteBar";
+      bar.style.cssText="display:flex;gap:6px;align-items:center;padding:6px 0;flex-wrap:wrap";
+      const btn=document.createElement("button");btn.type="button";btn.id="akPasteClipBtn";btn.textContent="📋 Paste Clip";
+      const info=document.createElement("span");info.id="akPasteClipInfo";info.style.cssText="font-size:11px;opacity:.7";
+      bar.append(btn,info);host.parentElement&&host.parentElement.insertBefore(bar,host);
+      btn.onclick=()=>{
+        const idx=typeof currentIndex==="number"?currentIndex:files.length-1;
+        if(window.akClipClipboard&&typeof akPasteClip==="function")akPasteClip(idx);
+      };
+    }
+    const info=bar.querySelector("#akPasteClipInfo");
+    if(info)info.textContent=window.akClipClipboard?"Clip copied — tap Paste":"Copy a clip first";
+    const btn=bar.querySelector("#akPasteClipBtn");if(btn)btn.disabled=!window.akClipClipboard;
+  }
+  window.akRefreshPasteBar=ensure;
+  window.addEventListener("load",()=>setTimeout(ensure,3500));
+  const oldCopy=window.akCopyClip;
+  if(typeof oldCopy==="function")window.akCopyClip=function(i){const r=oldCopy(i);setTimeout(ensure,0);return r};
+  const oldPaste=window.akPasteClip;
+  if(typeof oldPaste==="function")window.akPasteClip=function(i){const r=oldPaste(i);setTimeout(ensure,0);return r};
+})();
