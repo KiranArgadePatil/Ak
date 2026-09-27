@@ -1339,7 +1339,7 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
       const i=Number(b.dataset.index);if(!Number.isFinite(i)||!files[i])return;
       e.preventDefault();e.stopPropagation();
       const rect=b.getBoundingClientRect(),startX=e.clientX,c0=(clipSettings&&clipSettings[i])||{};
-      const oldStart=Number(c0.trimStart||0),oldEnd=Number(c0.trimEnd??files[i].duration||3);\n      const originalDuration=Math.max(.05,oldEnd-oldStart);
+      const oldStart=Number(c0.trimStart||0),oldEnd=Number(c0.trimEnd ?? (files[i].duration||3));       const originalDuration=Math.max(.05,oldEnd-oldStart);
       const px=Math.max(8,rect.width),total=Math.max(.1,oldEnd-oldStart);
       try{if(typeof pushHistory==="function")pushHistory()}catch(_){}
       const move=ev=>{
@@ -1389,7 +1389,7 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
       const b=h.closest(".clip-block");if(!b)return;
       const i=Number(b.dataset.index),c=(clipSettings&&clipSettings[i])||{},f=files[i];
       if(!Number.isFinite(i)||!f)return;
-      const start=Number(c.trimStart||0),end=Number(c.trimEnd??f.duration||3);
+      const start=Number(c.trimStart||0),end=Number(c.trimEnd ?? (f.duration||3));
       const preview=t=>{
         if(typeof currentIndex!=="undefined")currentIndex=i;
         if(f.type&&f.type.startsWith("image/")){
@@ -1424,7 +1424,7 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
     const i=Number(changedIndex);if(!Array.isArray(files)||!Array.isArray(clipSettings)||!Number.isFinite(i))return;
     let cursor=0;
     for(let n=0;n<files.length;n++){
-      const c=clipSettings[n]||{},st=Number(c.trimStart||0),en=Number(c.trimEnd??files[n]?.duration||c.duration||3);
+      const c=clipSettings[n]||{},st=Number(c.trimStart||0),en=Number(c.trimEnd ?? (files[n]?.duration||c.duration||3));
       c.timelineOffset=cursor;
       clipSettings[n]=c;
       cursor+=Math.max(.05,en-st);
@@ -1454,7 +1454,7 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
     host.querySelectorAll(".ak-gap-marker,.ak-overlap-marker").forEach(x=>x.remove());
     for(let i=0;i<files.length-1;i++){
       const a=clipSettings[i]||{},b=clipSettings[i+1]||{};
-      const ae=Number(a.timelineOffset||0)+Math.max(.05,Number(a.trimEnd??files[i]?.duration||a.duration||3)-Number(a.trimStart||0));
+      const ae=Number(a.timelineOffset||0)+Math.max(.05,Number(a.trimEnd ?? (files[i]?.duration||a.duration||3))-Number(a.trimStart||0));
       const bs=Number(b.timelineOffset||0),d=bs-ae;
       if(Math.abs(d)<.02)continue;
       const marker=document.createElement("span");
@@ -1495,7 +1495,7 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
     const i=Number(index);
     if(!Array.isArray(files)||!Array.isArray(clipSettings)||i<0||i>=files.length)return false;
     try{if(typeof pushHistory==="function")pushHistory()}catch(_){}
-    const c=clipSettings[i]||{},start=Number(c.trimStart||0),end=Number(c.trimEnd??files[i].duration||3);
+    const c=clipSettings[i]||{},start=Number(c.trimStart||0),end=Number(c.trimEnd ?? (files[i].duration||3));
     const duration=Math.max(.05,end-start);
     files.splice(i,1);clipSettings.splice(i,1);
     for(let j=i;j<clipSettings.length;j++){
