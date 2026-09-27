@@ -324,7 +324,7 @@ function mimeType(){
 function extFor(m){return m.startsWith("video/mp4")?"mp4":"webm"}
 window.transitionType="none";
 
-let exportConfig={width:1280,height:720,fps:30,bitrate:6000000};
+exportConfig ={width:1280,height:720,fps:30,bitrate:6000000};
 function openExportSettings(){
  tools.innerHTML='<b>⚙️ Export Settings</b><label>Quality <select id="exQuality"><option value="720">720p</option><option value="1080" selected>1080p</option></select></label><label>FPS <select id="exFps"><option>24</option><option selected>30</option><option>60</option></select></label><label>Bitrate <select id="exBitrate"><option value="4000000">4 Mbps</option><option value="6000000" selected>6 Mbps</option><option value="10000000">10 Mbps</option></select></label><button id="applyExport">Apply</button><div class="hint">Browser supportनुसार MP4 किंवा WebM export होईल.</div>';
 }
