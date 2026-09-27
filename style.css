@@ -38,3 +38,9 @@
   .tools button{min-height:40px;touch-action:manipulation}
   .media-bar button,.top-actions button{min-height:40px}
 }
+
+/* Interactive timeline */
+#track{position:relative;min-height:56px;touch-action:none;user-select:none;overflow:hidden}
+#track .clip-block{display:inline-flex;align-items:center;min-height:42px;margin:6px 4px;padding:0 12px;border-radius:8px;cursor:pointer;touch-action:manipulation}
+#track .clip-block:active{cursor:pointer;transform:scale(.98)}
+.ak-timeline-playhead{position:absolute;top:0;bottom:0;width:2px;background:currentColor;opacity:.85;pointer-events:none;z-index:5;left:0}
