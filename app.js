@@ -1470,3 +1470,24 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   }
   window.addEventListener("load",()=>setTimeout(bind,2900));
 })();
+
+
+/* AK CLIP ACTIONS DELETE BUTTON v1 */
+(function(){
+  function decorate(){
+    const track=document.getElementById("track");if(!track)return;
+    track.querySelectorAll(".clip-block").forEach(b=>{
+      if(b.querySelector(".ak-clip-delete"))return;
+      const btn=document.createElement("button");
+      btn.className="ak-clip-delete";btn.type="button";btn.textContent="🗑️";
+      btn.title="Delete clip";
+      btn.style.cssText="position:absolute;right:12px;top:2px;z-index:30;border:0;border-radius:4px;padding:2px 4px;font-size:11px;background:rgba(0,0,0,.45);color:#fff;cursor:pointer;touch-action:manipulation";
+      btn.onclick=e=>{e.preventDefault();e.stopPropagation();const i=Number(b.dataset.index);if(Number.isFinite(i)&&typeof akRippleDelete==="function")akRippleDelete(i)};
+      b.style.position="relative";b.appendChild(btn);
+    });
+  }
+  window.akDecorateClipDeleteButtons=decorate;
+  window.addEventListener("load",()=>setTimeout(decorate,3100));
+  const old=window.renderTimeline;
+  if(typeof old==="function")window.renderTimeline=function(){const r=old.apply(this,arguments);setTimeout(decorate,0);return r};
+})();
