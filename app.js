@@ -625,3 +625,108 @@ function openMultiTrackEditor(){tools.innerHTML='<b>🎚️ Multi-track</b><butt
   }
   window.addEventListener("load",()=>setTimeout(refreshCompletionUI,300));
 })();
+
+
+/* AK EDITOR COMPLETION PACK v2 — Smart Auto Cut, Templates, Pro Mask/Blend, Export readiness, Mobile polish */
+(function(){
+  const $id=id=>document.getElementById(id);
+  const cfg=()=>typeof settings==="function"?settings():(typeof clipSettings!=="undefined"?(clipSettings[currentIndex]||(clipSettings[currentIndex]={})):({}));
+  function setStatus(t,err=false){if(typeof msg==="function")msg(t,err);}
+
+  const templates={
+    cinematic:{name:"Cinematic",ratio:"16:9",filter:"contrast(1.08) saturate(.86)",transition:"fade",speed:1,textAnimation:"fade",zoom:1.03,brightness:1,contrast:1.08,saturation:.9},
+    reel:{name:"Reel",ratio:"9:16",filter:"contrast(1.05) saturate(1.12)",transition:"zoom",speed:1.08,textAnimation:"pop",zoom:1.04,brightness:1.02,contrast:1.05,saturation:1.12},
+    beat:{name:"Beat Sync",ratio:"9:16",filter:"contrast(1.1) saturate(1.2)",transition:"flash",speed:1,textAnimation:"bounce",zoom:1.06,brightness:1,contrast:1.1,saturation:1.2},
+    story:{name:"Story",ratio:"9:16",filter:"brightness(1.04) saturate(1.05)",transition:"slide",speed:1,textAnimation:"slide",zoom:1.02,brightness:1.04,contrast:1,saturation:1.05},
+    youtube:{name:"YouTube",ratio:"16:9",filter:"contrast(1.04) saturate(1.03)",transition:"crossfade",speed:1,textAnimation:"fade",zoom:1,brightness:1,contrast:1.04,saturation:1.03}
+  };
+  function applyTemplate(key){
+    const p=templates[key]; if(!p)return;
+    const c=cfg(); Object.assign(c,{filter:p.filter,transition:p.transition,speed:p.speed,textAnimation:p.textAnimation,zoom:p.zoom,brightness:p.brightness,contrast:p.contrast,saturation:p.saturation,template:key});
+    if(p.ratio){ratio=p.ratio;const pr=$id("preview");if(pr){pr.classList.toggle("video-916",ratio==="9:16");pr.classList.toggle("ratio-square",ratio==="1:1");pr.classList.toggle("ratio-wide",ratio==="16:9");}}
+    try{applyVisualSettings();applyMaskPreview();applyTextAnimation&&applyTextAnimation();renderTransitionTracks&&renderTransitionTracks()}catch(e){}
+    setStatus("🎬 "+p.name+" Template लागू ✓");
+  }
+  window.akApplyTemplate=applyTemplate;
+
+  async function smartAutoCut(){
+    if(!files||!files.length){setStatus("आधी video जोडा.",true);return}
+    const f=files[currentIndex];
+    if(!f||!f.type.startsWith("video/")){setStatus("Video clip निवडा.",true);return}
+    if(!window.AudioContext&&!window.webkitAudioContext){setStatus("या browser मध्ये audio analysis उपलब्ध नाही.",true);return}
+    setStatus("🤖 Smart Auto Cut: audio analysis सुरू…");
+    try{
+      const AC=window.AudioContext||window.webkitAudioContext, ac=new AC();
+      const ab=await f.arrayBuffer(), buf=await ac.decodeAudioData(ab.slice(0));
+      const ch=buf.numberOfChannels, sr=buf.sampleRate, win=Math.max(256,Math.floor(sr*.12));
+      const rms=[];
+      for(let s=0;s<buf.length;s+=win){
+        let sum=0,n=0;
+        for(let c=0;c<ch;c++){const d=buf.getChannelData(c);const end=Math.min(buf.length,s+win);for(let i=s;i<end;i+=2){const v=d[i];sum+=v*v;n++}}
+        rms.push(Math.sqrt(sum/Math.max(1,n)));
+      }
+      const sorted=rms.slice().sort((a,b)=>a-b), floor=sorted[Math.floor(sorted.length*.28)]||0.01;
+      const threshold=Math.max(.012,floor*1.35), minGap=1.15, points=[];
+      let silence=0, startSilence=0;
+      for(let i=0;i<rms.length;i++){
+        if(rms[i]<threshold){if(!silence)startSilence=i;silence+=.12}
+        else{
+          if(silence>=.48){
+            const p=startSilence*.12+silence*.5;
+            if(p>0.35&&p<buf.duration-0.35&&(!points.length||p-points[points.length-1]>=minGap))points.push(Number(p.toFixed(2)));
+          }
+          silence=0;
+        }
+      }
+      const cuts=points.slice(0,40);
+      if(typeof splitPoints!=="undefined"){splitPoints.splice(0,splitPoints.length,...cuts);renderTimeline&&renderTimeline();renderTransitionTracks&&renderTransitionTracks()}
+      if(typeof cfg==="function"){cfg().autoCut={mode:"silence",threshold,points:cuts,createdAt:new Date().toISOString()}}
+      try{await ac.close()}catch(e){}
+      setStatus("✂️ Smart Auto Cut पूर्ण ✓ — "+cuts.length+" cut points");
+    }catch(e){console.error(e);setStatus("Auto Cut analysis failed. Video मध्ये usable audio track आहे का तपासा.",true)}
+  }
+  window.akSmartAutoCut=smartAutoCut;
+
+  function setMask(name){
+    const c=cfg(); c.mask=name;
+    const v=$id("video"); if(!v)return;
+    const maps={none:"none",circle:"circle(47% at 50% 50%)",rect:"inset(3% 3% 3% 3% round 4%)",rounded:"inset(2% 2% 2% 2% round 7%)",diamond:"polygon(50% 0%,100% 50%,50% 100%,0% 50%)",oval:"ellipse(46% 42% at 50% 50%)"};
+    v.style.clipPath=maps[name]||"none";
+    setStatus("🎭 Mask: "+name+" ✓");
+  }
+  function setBlend(name){
+    const c=cfg(); c.blendMode=name;
+    const v=$id("video"); if(v)v.style.mixBlendMode=name;
+    setStatus("🌓 Blend: "+name+" ✓");
+  }
+
+  function exportReadiness(){
+    const types=["video/mp4;codecs=avc1.42E01E,mp4a.40.2","video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus"];
+    const supported=types.filter(x=>window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(x));
+    const mp4=supported.some(x=>x.startsWith("video/mp4"));
+    if(typeof exportConfig!=="undefined")exportConfig.preferredMime=mp4?"video/mp4":(supported[0]||"video/webm");
+    setStatus(mp4?"🎞️ MP4 recording capability उपलब्ध ✓":"🎞️ MP4 native recording नाही — WebM fallback वापरला जाईल.");
+    return {mp4,supported};
+  }
+
+  function advancedPanel(){
+    const t=$id("tools"); if(!t)return;
+    const old=t.querySelector(".ak-v2-panel"); if(old)old.remove();
+    const p=document.createElement("div"); p.className="ak-v2-panel";
+    p.innerHTML='<div class="ak-v2-title">🚀 PRO COMPLETION</div>'+
+      '<div class="ak-v2-row"><b>Templates</b><button data-ak2-template="cinematic">🎞️ Cinematic</button><button data-ak2-template="reel">📱 Reel</button><button data-ak2-template="beat">🥁 Beat</button><button data-ak2-template="story">📖 Story</button><button data-ak2-template="youtube">▶️ YouTube</button></div>'+
+      '<div class="ak-v2-row"><b>Smart Cut</b><button id="akSmartCut">🤖 Auto Cut</button><button id="akExportCheck">🎞️ Export Check</button></div>'+
+      '<div class="ak-v2-row"><b>Mask</b><button data-ak2-mask="none">None</button><button data-ak2-mask="circle">Circle</button><button data-ak2-mask="oval">Oval</button><button data-ak2-mask="rounded">Rounded</button><button data-ak2-mask="diamond">Diamond</button></div>'+
+      '<div class="ak-v2-row"><b>Blend</b><button data-ak2-blend="normal">Normal</button><button data-ak2-blend="screen">Screen</button><button data-ak2-blend="multiply">Multiply</button><button data-ak2-blend="overlay">Overlay</button><button data-ak2-blend="soft-light">Soft Light</button></div>';
+    t.appendChild(p);
+    p.querySelectorAll("[data-ak2-template]").forEach(b=>b.onclick=()=>applyTemplate(b.dataset.ak2Template));
+    p.querySelectorAll("[data-ak2-mask]").forEach(b=>b.onclick=()=>setMask(b.dataset.ak2Mask));
+    p.querySelectorAll("[data-ak2-blend]").forEach(b=>b.onclick=()=>setBlend(b.dataset.ak2Blend));
+    $id("akSmartCut").onclick=smartAutoCut; $id("akExportCheck").onclick=exportReadiness;
+  }
+
+  window.addEventListener("load",()=>setTimeout(advancedPanel,450));
+  document.addEventListener("click",e=>{
+    const b=e.target.closest("[data-ak2-template]"); if(b&&$id("tools")&&!$id("tools").contains(b))applyTemplate(b.dataset.ak2Template);
+  });
+})();
