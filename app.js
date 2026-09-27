@@ -1708,3 +1708,54 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   }
   window.addEventListener("load",()=>setTimeout(install,1000));
 })();
+
+
+
+/* AK PROFESSIONAL TEXT EDITOR v1 */
+(function(){
+  const FONTS=["Arial","Georgia","Verdana","Trebuchet MS","Courier New","Times New Roman"];
+  const ANIMS=["none","fade","pop","zoom","slideUp","bounce","spin"];
+  function c(){return typeof settings==="function"?settings():{}}
+  function applyText(){
+    const x=c(),o=document.getElementById("overlay");if(!o)return;
+    o.textContent=x.text||o.textContent||"";
+    x.text=x.text||o.textContent||"";
+    const s=x.textStyle||{};
+    o.style.fontFamily=s.font||"Arial";o.style.fontSize=(Number(s.size||34))+"px";
+    o.style.fontWeight=s.bold?"700":"400";o.style.fontStyle=s.italic?"italic":"normal";
+    o.style.textDecoration=s.underline?"underline":"none";o.style.color=s.color||"#fff";
+    o.style.background=s.bg||"transparent";o.style.textAlign=s.align||"center";
+    o.style.letterSpacing=(Number(s.spacing||0))+"px";
+    o.style.webkitTextStroke=(Number(s.stroke||0))+"px "+(s.strokeColor||"#000");
+    o.style.textShadow=s.shadow?"2px 2px 5px #000":"none";
+    try{if(typeof renderOverlayTracks==="function")renderOverlayTracks()}catch(_){}
+    try{if(typeof saveProject==="function")saveProject()}catch(_){}
+  }
+  function open(){
+    if(typeof tools==="undefined")return;
+    const x=c();x.textStyle=x.textStyle||{};const s=x.textStyle;
+    let h='<b>✍️ Professional Text Editor</b><textarea id="akTextInput" rows="3" placeholder="Text लिहा…"></textarea>';
+    h+='<label>Font <select id="akTextFont"></select></label><label>Size <input id="akTextSize" type="range" min="10" max="120" value="'+Number(s.size||34)+'"><span id="akTextSizeVal">'+Number(s.size||34)+'px</span></label>';
+    h+='<label>Color <input id="akTextColor" type="color" value="'+(s.color||"#ffffff")+'"></label><label>Background <input id="akTextBg" type="color" value="'+(s.bg&&s.bg!=="transparent"?s.bg:"#000000")+'"></label>';
+    h+='<label>Alignment <select id="akTextAlign"><option>left</option><option>center</option><option>right</option></select></label>';
+    h+='<label>Spacing <input id="akTextSpacing" type="range" min="-5" max="20" value="'+Number(s.spacing||0)+'"></label><label>Stroke <input id="akTextStroke" type="range" min="0" max="8" step=".5" value="'+Number(s.stroke||0)+'"></label>';
+    h+='<label>Animation <select id="akTextAnim"></select></label><button type="button" id="akTextBold">B</button><button type="button" id="akTextItalic"><i>I</i></button><button type="button" id="akTextUnderline"><u>U</u></button><button type="button" id="akTextShadow">Shadow</button>';
+    h+='<button type="button" id="akTextApply">✓ Apply</button><button type="button" id="akTextClear">🗑 Clear</button><button type="button" id="akTextBack">← Back</button>';
+    tools.innerHTML=h;
+    const inp=document.getElementById("akTextInput");inp.value=x.text||"";
+    const fs=document.getElementById("akTextFont");FONTS.forEach(f=>{const o=document.createElement("option");o.value=f;o.textContent=f;o.selected=s.font===f;fs.appendChild(o)});
+    const an=document.getElementById("akTextAnim");ANIMS.forEach(a=>{const o=document.createElement("option");o.value=a;o.textContent=a;o.selected=s.animation===a;an.appendChild(o)});
+    document.getElementById("akTextAlign").value=s.align||"center";
+    inp.oninput=()=>{x.text=inp.value;applyText()};fs.onchange=e=>{s.font=e.target.value;applyText()};
+    document.getElementById("akTextSize").oninput=e=>{s.size=+e.target.value;document.getElementById("akTextSizeVal").textContent=e.target.value+"px";applyText()};
+    document.getElementById("akTextColor").oninput=e=>{s.color=e.target.value;applyText()};document.getElementById("akTextBg").oninput=e=>{s.bg=e.target.value;applyText()};
+    document.getElementById("akTextAlign").onchange=e=>{s.align=e.target.value;applyText()};document.getElementById("akTextSpacing").oninput=e=>{s.spacing=+e.target.value;applyText()};
+    document.getElementById("akTextStroke").oninput=e=>{s.stroke=+e.target.value;applyText()};an.onchange=e=>{s.animation=e.target.value;x.textAnimation=e.target.value;applyText()};
+    document.getElementById("akTextBold").onclick=()=>{s.bold=!s.bold;applyText()};document.getElementById("akTextItalic").onclick=()=>{s.italic=!s.italic;applyText()};
+    document.getElementById("akTextUnderline").onclick=()=>{s.underline=!s.underline;applyText()};document.getElementById("akTextShadow").onclick=()=>{s.shadow=!s.shadow;applyText()};
+    document.getElementById("akTextApply").onclick=applyText;document.getElementById("akTextClear").onclick=()=>{x.text="";inp.value="";applyText()};
+    document.getElementById("akTextBack").onclick=()=>{try{if(typeof act==="function")act("text")}catch(_){}};
+  }
+  window.openProfessionalTextEditor=open;
+  window.addEventListener("load",()=>setTimeout(()=>{if(typeof tools!=="undefined"&&tools.parentElement&&!document.getElementById("akProfessionalTextBtn")){const b=document.createElement("button");b.id="akProfessionalTextBtn";b.type="button";b.textContent="✍️ Text Pro";b.style.cssText="margin:4px;padding:7px 10px;border:1px solid #596274;border-radius:8px;cursor:pointer";b.onclick=open;tools.parentElement.insertBefore(b,tools)}},1100));
+})();
