@@ -1394,3 +1394,29 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   }
   window.addEventListener("load",()=>setTimeout(bind,2900));
 })();
+
+
+/* AK GAP + OVERLAP DETECTION v1 */
+(function(){
+  function scan(){
+    const host=document.getElementById("track");if(!host||!Array.isArray(files)||!Array.isArray(clipSettings))return;
+    host.querySelectorAll(".ak-gap-marker,.ak-overlap-marker").forEach(x=>x.remove());
+    for(let i=0;i<files.length-1;i++){
+      const a=clipSettings[i]||{},b=clipSettings[i+1]||{};
+      const ae=Number(a.timelineOffset||0)+Math.max(.05,Number(a.trimEnd??files[i]?.duration||a.duration||3)-Number(a.trimStart||0));
+      const bs=Number(b.timelineOffset||0),d=bs-ae;
+      if(Math.abs(d)<.02)continue;
+      const marker=document.createElement("span");
+      marker.className=d>0?"ak-gap-marker":"ak-overlap-marker";
+      marker.textContent=d>0?" GAP "+d.toFixed(2)+"s":" OVERLAP "+Math.abs(d).toFixed(2)+"s";
+      marker.style.cssText="display:inline-block;margin:2px 4px;padding:2px 5px;border-radius:4px;font-size:9px;font-weight:700;pointer-events:none;opacity:.85";
+      marker.style.background=d>0?"rgba(255,190,0,.22)":"rgba(255,70,70,.22)";
+      const blocks=host.querySelectorAll(".clip-block");
+      if(blocks[i+1])blocks[i+1].prepend(marker);
+    }
+  }
+  window.akDetectTimelineGaps=scan;
+  window.addEventListener("load",()=>setTimeout(scan,3100));
+  const old=window.renderTimeline;
+  if(typeof old==="function")window.renderTimeline=function(){const r=old.apply(this,arguments);setTimeout(scan,0);return r};
+})();
