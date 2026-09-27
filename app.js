@@ -905,7 +905,7 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
       ks.forEach(k=>{
         const m=document.createElement("button");m.type="button";m.className="ak-kf-marker";m.textContent="◆";
         const fIsImage=f&&f.type&&f.type.startsWith("image/");
-        const minTime=fIsImage?0:Number(c.trimStart||0),maxTime=fIsImage?dur:Math.max(minTime,Number(c.trimEnd ?? ((f&&f.duration)||dur));
+        const minTime=fIsImage?0:Number(c.trimStart||0),maxTime=fIsImage?dur:Math.max(minTime,Number(c.trimEnd ?? ((f&&f.duration)||dur)));
         const span=Math.max(.01,maxTime-minTime);
         const rel=Math.max(0,Math.min(1,(Number(k.time||0)-minTime)/span));
         m.style.left=(rel*100)+"%";m.title="Keyframe "+Number(k.time||0).toFixed(2)+"s";
@@ -943,7 +943,7 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
     if(!p){p=document.createElement("div");p.className="ak-timeline-playhead";p.style.cssText="position:absolute;top:0;bottom:0;width:2px;background:#ff3b30;z-index:20;pointer-events:none;transform:translateX(-1px)";el.appendChild(p)}
     const idx=Math.max(0,Math.min(files.length-1,Number(currentIndex||0)));
     const f=files[idx],c=(clipSettings&&clipSettings[idx])||{};
-    const dur=f&&f.type&&f.type.startsWith("image/")?Number(c.duration||photoDuration||3):Math.max(.01,Number(c.trimEnd ?? ((f&&f.duration)||3)-Number(c.trimStart||0));
+    const dur=f&&f.type&&f.type.startsWith("image/")?Number(c.duration||photoDuration||3):Math.max(.01,Number(c.trimEnd ?? ((f&&f.duration)||3))-Number(c.trimStart||0));
     const now=f&&f.type&&f.type.startsWith("image/")?Number(window.photoPreviewTime||0):Number(video&&video.currentTime||0);
     const ratio=Math.max(0,Math.min(1,(now-Number(c.trimStart||0))/Math.max(.01,dur)));
     const blocks=el.querySelectorAll(".clip-block");
@@ -971,7 +971,7 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
       if(typeof currentIndex!=="undefined")currentIndex=idx;
       const f=files[idx],c=(clipSettings&&clipSettings[idx])||{};
       const start=Number(c.trimStart||0);
-      const dur=f&&f.type&&f.type.startsWith("image/")?Number(c.duration||photoDuration||3):Math.max(.01,Number(c.trimEnd ?? ((f&&f.duration)||3)-start);
+      const dur=f&&f.type&&f.type.startsWith("image/")?Number(c.duration||photoDuration||3):Math.max(.01,Number(c.trimEnd ?? ((f&&f.duration)||3))-start);
       const t=start+ratio*dur;
       if(f&&f.type&&f.type.startsWith("image/")){
         window.photoPreviewTime=t;
