@@ -1564,3 +1564,81 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   const oldPaste=window.akPasteClip;
   if(typeof oldPaste==="function")window.akPasteClip=function(i){const r=oldPaste(i);setTimeout(ensure,0);return r};
 })();
+
+
+
+/* AK PROFESSIONAL EFFECTS LIBRARY v1 */
+(function(){
+  const EFFECTS={
+    none:{label:"Original",filter:"none"},
+    cinematic:{label:"Cinematic",filter:"contrast(1.14) saturate(1.08) sepia(.04)"},
+    noir:{label:"Noir",filter:"grayscale(1) contrast(1.22)"},
+    warm:{label:"Warm",filter:"sepia(.16) saturate(1.18) contrast(1.04)"},
+    cool:{label:"Cool",filter:"saturate(.92) hue-rotate(12deg) contrast(1.05)"},
+    vivid:{label:"Vivid",filter:"saturate(1.45) contrast(1.08)"},
+    vintage:{label:"Vintage",filter:"sepia(.28) saturate(.85) contrast(1.06)"},
+    dream:{label:"Dream",filter:"brightness(1.08) saturate(1.12) blur(.35px)"},
+    fade:{label:"Fade",filter:"brightness(1.08) contrast(.92) saturate(.88)"},
+    sharp:{label:"Sharp",filter:"contrast(1.16) saturate(1.08)"},
+    flash:{label:"Flash",filter:"brightness(1.38) contrast(1.10)"},
+    blur:{label:"Soft Blur",filter:"blur(3px)"},
+    glitch:{label:"Glitch",filter:"contrast(1.22) saturate(1.42)"},
+    vhs:{label:"VHS",filter:"contrast(1.12) saturate(1.16) sepia(.08)"},
+    party:{label:"Party",filter:"saturate(1.65) contrast(1.10) hue-rotate(-8deg)"}
+  };
+  function current(){return typeof settings==="function"?settings():{}}
+  function apply(type){
+    const e=EFFECTS[type]||EFFECTS.none,c=current();
+    c.effect=type;c.effectPreset=type;c.effectFilter=e.filter;
+    if(typeof video!=="undefined"&&video.style)video.style.filter=e.filter;
+    try{if(typeof saveProject==="function")saveProject()}catch(_){}
+    try{if(typeof renderOverlayTracks==="function")renderOverlayTracks()}catch(_){}
+    if(typeof msg==="function")msg("✨ "+e.label+" effect लागू ✓");
+  }
+  window.akEffectsLibrary=EFFECTS;
+  window.akApplyEffect=apply;
+  window.openEffectsLibrary=function(){
+    if(typeof tools==="undefined")return;
+    const groups=[
+      ["🎬 Cinematic",["cinematic","noir","vintage","warm","cool"]],
+      ["🌈 Color",["vivid","fade","sharp","dream"]],
+      ["⚡ Creative",["flash","glitch","vhs","party","blur"]],
+      ["◻️ Basic",["none"]]
+    ];
+    let html='<b>🎨 Professional Effects</b><small>Preview + project setting • tap an effect</small>';
+    groups.forEach(g=>{
+      html+='<div style="margin:8px 0 3px;font-weight:700">'+g[0]+'</div><div style="display:grid;grid-template-columns:repeat(3,1fr);gap:6px">';
+      g[1].forEach(k=>{
+        const e=EFFECTS[k];
+        html+='<button type="button" data-ak-effect="'+k+'" style="padding:9px 5px;border:1px solid #596274;border-radius:8px;background:#202633;color:#fff;font-size:11px">'+e.label+'</button>';
+      });
+      html+='</div>';
+    });
+    html+='<button type="button" id="akEffectBack" style="margin-top:9px">← Back</button>';
+    tools.innerHTML=html;
+    tools.querySelectorAll("[data-ak-effect]").forEach(b=>b.onclick=()=>apply(b.dataset.akEffect));
+    const back=document.getElementById("akEffectBack");
+    if(back)back.onclick=()=>{try{if(typeof act==="function")act("effects")}catch(_){}};
+  };
+  function installButton(){
+    if(typeof tools==="undefined"||!tools.parentElement||document.getElementById("akEffectsLibraryBtn"))return;
+    const b=document.createElement("button");
+    b.id="akEffectsLibraryBtn";b.type="button";b.textContent="🎨 Effects";
+    b.title="Professional Effects Library";
+    b.style.cssText="margin:4px;padding:7px 10px;border:1px solid #596274;border-radius:8px;cursor:pointer";
+    b.onclick=window.openEffectsLibrary;
+    tools.parentElement.insertBefore(b,tools);
+  }
+  const oldCanvas=window.applyCanvasEffectPreset;
+  window.applyCanvasEffectPreset=function(ctx,type){
+    const e=EFFECTS[type]||EFFECTS.none;
+    if(ctx)try{ctx.filter=e.filter}catch(_){}
+    if(typeof oldCanvas==="function" && !EFFECTS[type])try{oldCanvas(ctx,type)}catch(_){}
+  };
+  const oldAdd=window.addEffectPresetToCurrent;
+  window.addEffectPresetToCurrent=function(type){
+    if(EFFECTS[type])return apply(type);
+    if(typeof oldAdd==="function")return oldAdd(type);
+  };
+  window.addEventListener("load",()=>setTimeout(installButton,900));
+})();
