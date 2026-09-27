@@ -1225,3 +1225,19 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
     };
   }
 })();
+
+
+/* AK TIMELINE DRAG HISTORY v1 */
+(function(){
+  function push(){
+    try{if(typeof pushHistory==="function")pushHistory()}catch(_){}
+  }
+  function bind(){
+    const lanes=document.getElementById("akMultiTrackLanes");if(!lanes||lanes.dataset.historyBound)return;
+    lanes.dataset.historyBound="1";
+    lanes.addEventListener("pointerdown",e=>{
+      const b=e.target.closest("[data-index]");if(b&&b.closest('[data-track="VIDEO 1"]'))push();
+    },{capture:true});
+  }
+  window.addEventListener("load",()=>setTimeout(bind,2100));
+})();
