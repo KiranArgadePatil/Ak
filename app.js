@@ -1365,3 +1365,32 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   }
   window.addEventListener("load",()=>setTimeout(bind,2700));
 })();
+
+
+/* AK RIPPLE TIMELINE v1 */
+(function(){
+  window.akRippleReflow=function(changedIndex){
+    const i=Number(changedIndex);if(!Array.isArray(files)||!Array.isArray(clipSettings)||!Number.isFinite(i))return;
+    let cursor=0;
+    for(let n=0;n<files.length;n++){
+      const c=clipSettings[n]||{},st=Number(c.trimStart||0),en=Number(c.trimEnd??files[n]?.duration||c.duration||3);
+      c.timelineOffset=cursor;
+      clipSettings[n]=c;
+      cursor+=Math.max(.05,en-st);
+    }
+    try{if(typeof renderTimeline==="function")renderTimeline()}catch(_){}
+    try{if(typeof akRenderMultiTrackLanes==="function")akRenderMultiTrackLanes()}catch(_){}
+    try{if(typeof saveProject==="function")saveProject()}catch(_){}
+  };
+  function bind(){
+    const track=document.getElementById("track");if(!track||track.dataset.rippleBound)return;
+    track.dataset.rippleBound="1";
+    let timer;
+    track.addEventListener("dblclick",e=>{
+      const b=e.target.closest(".clip-block");if(!b)return;
+      const i=Number(b.dataset.index);if(!Number.isFinite(i))return;
+      clearTimeout(timer);timer=setTimeout(()=>window.akRippleReflow(i),80);
+    });
+  }
+  window.addEventListener("load",()=>setTimeout(bind,2900));
+})();
