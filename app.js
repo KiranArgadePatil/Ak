@@ -1436,3 +1436,37 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
     try{if(typeof akRenderMultiTrackLanes==="function")setTimeout(akRenderMultiTrackLanes,0)}catch(_){}
   };
 })();
+
+
+/* AK RIPPLE DELETE v1 */
+(function(){
+  window.akRippleDelete=function(index){
+    const i=Number(index);
+    if(!Array.isArray(files)||!Array.isArray(clipSettings)||i<0||i>=files.length)return false;
+    try{if(typeof pushHistory==="function")pushHistory()}catch(_){}
+    const c=clipSettings[i]||{},start=Number(c.trimStart||0),end=Number(c.trimEnd??files[i].duration||3);
+    const duration=Math.max(.05,end-start);
+    files.splice(i,1);clipSettings.splice(i,1);
+    for(let j=i;j<clipSettings.length;j++){
+      const nc=clipSettings[j]||{};
+      nc.timelineOffset=Math.max(0,Number(nc.timelineOffset||0)-duration);
+      clipSettings[j]=nc;
+    }
+    if(typeof currentIndex!=="undefined")currentIndex=Math.max(0,Math.min(currentIndex,files.length-1));
+    try{if(typeof saveProject==="function")saveProject()}catch(_){}
+    try{if(typeof renderTimeline==="function")renderTimeline()}catch(_){}
+    try{if(typeof akRenderMultiTrackLanes==="function"){setTimeout(akRenderMultiTrackLanes,0)}catch(_){}
+    return true;
+  };
+  function bind(){
+    const track=document.getElementById("track");if(!track||track.dataset.rippleDeleteBound)return;
+    track.dataset.rippleDeleteBound="1";
+    track.addEventListener("contextmenu",e=>{
+      const b=e.target.closest(".clip-block");if(!b)return;
+      e.preventDefault();
+      const i=Number(b.dataset.index);
+      if(Number.isFinite(i))window.akRippleDelete(i);
+    });
+  }
+  window.addEventListener("load",()=>setTimeout(bind,2900));
+})();
