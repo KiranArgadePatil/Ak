@@ -1288,7 +1288,7 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
       const i=Number(b.dataset.index);if(!Number.isFinite(i)||!files[i])return;
       e.preventDefault();e.stopPropagation();
       const rect=b.getBoundingClientRect(),startX=e.clientX,c0=(clipSettings&&clipSettings[i])||{};
-      const oldStart=Number(c0.trimStart||0),oldEnd=Number(c0.trimEnd??files[i].duration||3);
+      const oldStart=Number(c0.trimStart||0),oldEnd=Number(c0.trimEnd??files[i].duration||3);\n      const originalDuration=Math.max(.05,oldEnd-oldStart);
       const px=Math.max(8,rect.width),total=Math.max(.1,oldEnd-oldStart);
       try{if(typeof pushHistory==="function")pushHistory()}catch(_){}
       const move=ev=>{
@@ -1303,7 +1303,7 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
         clipSettings[i]=c0;
         try{if(typeof renderTimeline==="function")renderTimeline()}catch(_){}
       };
-      const up=()=>{document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",up);try{if(typeof saveProject==="function")saveProject()}catch(_){}};
+      const up=()=>{document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",up);const newStart=Number(c0.trimStart||0),newEnd=Number(c0.trimEnd??oldEnd),newDuration=Math.max(.05,newEnd-newStart),delta=newDuration-originalDuration;if(Math.abs(delta)>.001&&Array.isArray(clipSettings)){for(let j=i+1;j<clipSettings.length;j++){const nc=clipSettings[j]||{};nc.timelineOffset=Math.max(0,Number(nc.timelineOffset||0)+delta);clipSettings[j]=nc}}try{if(typeof saveProject==="function")saveProject()}catch(_){}};
       document.addEventListener("pointermove",move);document.addEventListener("pointerup",up,{once:true});
     }
     track.addEventListener("pointerdown",e=>{
@@ -1419,4 +1419,20 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   window.addEventListener("load",()=>setTimeout(scan,3100));
   const old=window.renderTimeline;
   if(typeof old==="function")window.renderTimeline=function(){const r=old.apply(this,arguments);setTimeout(scan,0);return r};
+})();
+
+
+/* AK RIPPLE TIMELINE v1 */
+(function(){
+  window.akRippleShift=function(index,delta){
+    const i=Number(index),d=Number(delta||0);
+    if(!Array.isArray(clipSettings)||!Number.isFinite(i)||!Number.isFinite(d))return;
+    for(let j=i+1;j<clipSettings.length;j++){
+      const c=clipSettings[j]||{};
+      c.timelineOffset=Math.max(0,Number(c.timelineOffset||0)+d);
+      clipSettings[j]=c;
+    }
+    try{if(typeof renderTimeline==="function")renderTimeline()}catch(_){}
+    try{if(typeof akRenderMultiTrackLanes==="function")setTimeout(akRenderMultiTrackLanes,0)}catch(_){}
+  };
 })();
