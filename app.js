@@ -829,3 +829,56 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   video.addEventListener("timeupdate",()=>{try{applyKeyframePreview(video.currentTime)}catch(e){}});
   video.addEventListener("seeked",()=>{try{applyKeyframePreview(video.currentTime)}catch(e){}});
 }
+
+
+/* AK ADVANCED TIMELINE v1 — safe override */
+(function(){
+  function clipLen(i){
+    const f=files&&files[i],c=(clipSettings&&clipSettings[i])||{};
+    if(f&&f.type&&f.type.startsWith("image/"))return Math.max(.25,Number(c.duration||photoDuration||3));
+    const a=Number(c.trimStart||0),b=Number(c.trimEnd??(f&&f.duration)||0);
+    return Math.max(.25,b>a?b-a:Number(f&&f.duration||3));
+  }
+  function draw(){
+    const el=document.getElementById("track"); if(!el)return;
+    const list=Array.isArray(files)?files:[];
+    el.innerHTML="";
+    el.style.position="relative";el.style.minHeight="58px";el.style.overflowX="auto";
+    if(!list.length){el.textContent="Media जोडल्यावर Timeline येथे दिसेल";return}
+    list.forEach((f,i)=>{
+      const c=(clipSettings&&clipSettings[i])||{},dur=clipLen(i);
+      const b=document.createElement("div");b.className="clip-block";b.dataset.clip=i;
+      b.style.position="relative";b.style.display="inline-flex";b.style.width=Math.max(130,dur*32)+"px";b.style.minHeight="34px";b.style.boxSizing="border-box";
+      b.textContent=(i===currentIndex?"▶ ":"")+((f&&f.name)||("Clip "+(i+1)))+" • "+dur.toFixed(1)+"s";
+      b.title="Clip "+(i+1)+" • "+dur.toFixed(1)+"s";
+      b.onclick=()=>{currentIndex=i;try{load(f)}catch(e){try{loadFile(f,i)}catch(x){}}draw()};
+      const lane=document.createElement("div");lane.style.cssText="position:absolute;left:0;right:0;bottom:-18px;height:18px;pointer-events:none";
+      const ks=(Array.isArray(keyframes)?keyframes:[]).filter(k=>k.clip===i);
+      ks.forEach(k=>{
+        const m=document.createElement("button");m.type="button";m.className="ak-kf-marker";m.textContent="◆";
+        const max=Math.max(.01,dur),rel=Math.max(0,Math.min(1,Number(k.time||0)/max));
+        m.style.left=(rel*100)+"%";m.title="Keyframe "+Number(k.time||0).toFixed(2)+"s";
+        m.onclick=e=>{e.stopPropagation();selectedKeyframe=k;showKeyframeEditor(k);applyKeyframePreview(k.time)};
+        m.onpointerdown=e=>{
+          e.stopPropagation();e.preventDefault();m.setPointerCapture(e.pointerId);
+          const rect=b.getBoundingClientRect(),startX=e.clientX,old=Number(k.time||0),scale=Math.max(.01,dur/Math.max(1,rect.width));
+          const move=q=>{const nt=Math.max(0,Math.min(dur,old+(q.clientX-startX)*scale));k.time=nt;m.style.left=(nt/dur*100)+"%";if(selectedKeyframe===k)applyKeyframePreview(nt)};
+          const up=()=>{m.removeEventListener("pointermove",move);m.removeEventListener("pointerup",up);keyframes.sort((a,b)=>a.clip-b.clip||a.time-b.time);renderOverlayTracks();msg("◆ Keyframe time बदलला ✓")};
+          m.addEventListener("pointermove",move);m.addEventListener("pointerup",up);
+        };
+        lane.appendChild(m);
+      });
+      b.appendChild(lane);el.appendChild(b);
+    });
+    if(Array.isArray(splitPoints)&&splitPoints.length){
+      const m=document.createElement("small");m.style.display="block";m.textContent="✂ Split: "+splitPoints.map(x=>fmt(x)).join(" • ");el.appendChild(m)
+    }
+  }
+  window.renderTimeline=draw;
+  window.renderKeyframeTracks=draw;
+  window.akAdvancedTimeline=draw;
+  if(typeof video!=="undefined"){
+    video.addEventListener("timeupdate",()=>{try{draw()}catch(e){}});
+  }
+  window.addEventListener("load",()=>setTimeout(draw,700));
+})();
