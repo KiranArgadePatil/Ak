@@ -1008,7 +1008,7 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
         try{if(typeof loadFile==="function")loadFile(idx)}catch(_){}
       }
       const c=(clipSettings&&clipSettings[idx])||{},f=files[idx],start=Number(c.trimStart||0);
-      const dur=f.type&&f.type.startsWith("image/")?Number(c.duration||photoDuration||3):Math.max(.01,Number(c.trimEnd??f.duration||3)-start);
+      const dur=f.type&&f.type.startsWith("image/")?Number(c.duration||photoDuration||3):Math.max(.01,Number(c.trimEnd ?? (f.duration||3))-start);
       const t=start+ratio*dur;
       if(f.type&&f.type.startsWith("image/")){window.photoPreviewTime=t;try{if(typeof renderPreview==="function")renderPreview()}catch(_){}}
       else if(typeof video!=="undefined"&&video){try{video.currentTime=t}catch(_){}}
