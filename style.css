@@ -22,3 +22,19 @@
 @keyframes akZoom{0%{opacity:0;transform:scale(1.5)}100%{opacity:1;transform:scale(1)}}
 @keyframes akBounce{0%{opacity:0;transform:translateY(-35px)}55%{opacity:1;transform:translateY(8px)}75%{transform:translateY(-4px)}100%{transform:translateY(0)}}
 @media(max-width:700px){.ak-completion-panel{gap:5px}.ak-completion-panel button{padding:7px 8px}}
+
+/* AK EDITOR COMPLETION PACK v2 — responsive Pro panel */
+.ak-v2-panel{width:100%;display:grid;gap:8px;margin-top:7px;padding:10px;border:1px solid #303746;border-radius:10px;background:linear-gradient(180deg,#111722,#0d1017)}
+.ak-v2-title{font-size:12px;font-weight:800;letter-spacing:.4px;color:#d9d0ff}
+.ak-v2-row{display:flex;align-items:center;gap:6px;flex-wrap:wrap}
+.ak-v2-row>b{font-size:10px;color:#8992a5;min-width:58px}
+.ak-v2-row button{font-size:11px;padding:7px 9px}
+@media(max-width:700px){
+  .ak-v2-panel{padding:8px;gap:7px}
+  .ak-v2-row{overflow-x:auto;flex-wrap:nowrap;padding-bottom:2px;-webkit-overflow-scrolling:touch}
+  .ak-v2-row>b{position:sticky;left:0;background:#111722;padding:5px 4px;border-radius:5px;z-index:2}
+  .ak-v2-row button{flex:0 0 auto;min-height:38px;touch-action:manipulation}
+  .tools{padding:8px;gap:6px}
+  .tools button{min-height:40px;touch-action:manipulation}
+  .media-bar button,.top-actions button{min-height:40px}
+}
