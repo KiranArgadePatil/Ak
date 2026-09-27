@@ -1134,3 +1134,45 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   };
   window.addEventListener("load",()=>setTimeout(()=>window.akRenderMultiTrackLanes(),1500));
 })();
+
+
+/* AK MULTI TRACK CLIP DRAG v1 */
+(function(){
+  function bind(){
+    const lanes=document.getElementById("akMultiTrackLanes"); if(!lanes||lanes.dataset.dragBound)return;
+    lanes.dataset.dragBound="1";
+    let drag=null;
+    lanes.addEventListener("pointerdown",e=>{
+      const b=e.target.closest("[data-index]"); if(!b)return;
+      const row=b.closest("[data-track]"); if(!row||row.dataset.track!=="VIDEO 1")return;
+      const idx=Number(b.dataset.index); if(!Number.isFinite(idx)||!files[idx])return;
+      drag={b,idx,startX:e.clientX,baseX:0};
+      b.setPointerCapture?.(e.pointerId); b.style.cursor="grabbing"; e.preventDefault();
+    });
+    lanes.addEventListener("pointermove",e=>{
+      if(!drag)return;
+      const dx=e.clientX-drag.startX;
+      drag.b.style.transform="translateX("+dx+"px)";
+    });
+    const stop=e=>{
+      if(!drag)return;
+      const dx=e.clientX-drag.startX;
+      drag.b.style.transform="";
+      const pxPerSec=32*Math.max(.5,Math.min(3,Number(window.akTimelineScale||1)));
+      const shift=Math.round((dx/pxPerSec)*100)/100;
+      const idx=drag.idx,c=(clipSettings&&clipSettings[idx])||{};
+      c.timelineOffset=Math.max(0,Number(c.timelineOffset||0)+shift);
+      if(clipSettings)clipSettings[idx]=c;
+      drag.b.style.cursor="pointer";
+      drag=null;
+      try{if(typeof saveProject==="function")saveProject()}catch(_){}
+      try{if(typeof renderTimeline==="function")renderTimeline()}catch(_){}
+      try{if(typeof akRenderMultiTrackLanes==="function")setTimeout(akRenderMultiTrackLanes,0)}catch(_){}
+    };
+    lanes.addEventListener("pointerup",stop);lanes.addEventListener("pointercancel",()=>{if(drag){drag.b.style.transform="";drag=null}});
+  }
+  window.akBindMultiTrackDrag=bind;
+  window.addEventListener("load",()=>setTimeout(bind,1700));
+  const old=window.akRenderMultiTrackLanes;
+  if(typeof old==="function")window.akRenderMultiTrackLanes=function(){const r=old.apply(this,arguments);setTimeout(bind,0);return r};
+})();
