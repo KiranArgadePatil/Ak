@@ -628,10 +628,28 @@ function pushHistory(){
   };
 window.renderKeyframeTracks=window.renderKeyframeTracks||function(){
     const el=document.getElementById("track");if(!el||!Array.isArray(keyframes))return;
-    const n=keyframes.filter(k=>k.clip===currentIndex).length;
-    el.dataset.keyframes=n;
+    const list=keyframes.filter(k=>k.clip===currentIndex).sort((x,y)=>x.time-y.time);
+    el.querySelectorAll(".ak-kf-marker").forEach(x=>x.remove());
+    const dur=currentImage?Number((clipSettings[currentIndex]||{}).duration||photoDuration||5):Number(video.duration||((clipSettings[currentIndex]||{}).trimEnd||1));
+    list.forEach((k,idx)=>{
+      const m=document.createElement("button");m.type="button";m.className="ak-kf-marker";m.textContent="◆";m.title="Keyframe "+(idx+1)+" • "+fmt(k.time);
+      m.style.left=Math.max(0,Math.min(100,(k.time/Math.max(.001,dur))*100))+"%";
+      m.dataset.kfIndex=String(keyframes.indexOf(k));
+      m.onpointerdown=ev=>{
+        ev.stopPropagation();selectedKeyframe=k;
+        const move=e=>{
+          const r=el.getBoundingClientRect(),p=Math.max(0,Math.min(1,(e.clientX-r.left)/Math.max(1,r.width)));
+          k.time=p*dur;keyframes.sort((x,y)=>x.clip-y.clip||x.time-y.time);renderKeyframeTracks();
+        };
+        const up=()=>{document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",up);pushHistory();msg("Keyframe time बदलला ✓")};
+        document.addEventListener("pointermove",move);document.addEventListener("pointerup",up);
+      };
+      m.onclick=ev=>{ev.stopPropagation();selectedKeyframe=k;video.currentTime=Math.max(0,Math.min(dur,k.time));msg("Keyframe "+(idx+1)+" select ✓")};
+      el.appendChild(m);
+    });
+    el.dataset.keyframes=String(list.length);
   };
-  window.renderTransitionTracks=window.renderTransitionTracks||function(){
+window.renderTransitionTracks=window.renderTransitionTracks||function(){
     const el=document.getElementById("track");if(!el)return;
     el.dataset.transition=String((typeof settings==="function"?settings():{}).transition||"none");
   };
