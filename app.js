@@ -882,3 +882,25 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   }
   window.addEventListener("load",()=>setTimeout(draw,700));
 })();
+
+
+/* AK TIMELINE PLAYHEAD v1 */
+(function(){
+  function update(){
+    const el=document.getElementById("track"); if(!el||!Array.isArray(files)||!files.length)return;
+    let p=el.querySelector(".ak-timeline-playhead");
+    if(!p){p=document.createElement("div");p.className="ak-timeline-playhead";p.style.cssText="position:absolute;top:0;bottom:0;width:2px;background:#ff3b30;z-index:20;pointer-events:none;transform:translateX(-1px)";el.appendChild(p)}
+    const idx=Math.max(0,Math.min(files.length-1,Number(currentIndex||0)));
+    const f=files[idx],c=(clipSettings&&clipSettings[idx])||{};
+    const dur=f&&f.type&&f.type.startsWith("image/")?Number(c.duration||photoDuration||3):Math.max(.01,Number(c.trimEnd??(f&&f.duration)||3)-Number(c.trimStart||0));
+    const now=f&&f.type&&f.type.startsWith("image/")?Number(window.photoPreviewTime||0):Number(video&&video.currentTime||0);
+    const ratio=Math.max(0,Math.min(1,(now-Number(c.trimStart||0))/Math.max(.01,dur)));
+    const blocks=el.querySelectorAll(".clip-block");
+    let x=0; for(let i=0;i<idx;i++)x+=Math.max(130,((files[i]&&files[i].duration)||Number((clipSettings[i]||{}).duration||photoDuration||3))*32);
+    const b=blocks[idx]; if(b)x+=ratio*b.getBoundingClientRect().width;
+    p.style.left=x+"px";
+  }
+  window.akUpdateTimelinePlayhead=update;
+  if(typeof video!=="undefined")video.addEventListener("timeupdate",update);
+  window.addEventListener("load",()=>setTimeout(update,900));
+})();
