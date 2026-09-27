@@ -1275,3 +1275,54 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   }
   window.addEventListener("load",()=>setTimeout(bind,2300));
 })();
+
+
+/* AK CLIP TRIM HANDLES v1 */
+(function(){
+  function bind(){
+    const track=document.getElementById("track");if(!track||track.dataset.trimBound)return;
+    track.dataset.trimBound="1";
+    function handle(e,side){
+      const h=e.target.closest(".ak-trim-handle");if(!h)return;
+      const b=h.closest(".clip-block");if(!b)return;
+      const i=Number(b.dataset.index);if(!Number.isFinite(i)||!files[i])return;
+      e.preventDefault();e.stopPropagation();
+      const rect=b.getBoundingClientRect(),startX=e.clientX,c0=(clipSettings&&clipSettings[i])||{};
+      const oldStart=Number(c0.trimStart||0),oldEnd=Number(c0.trimEnd??files[i].duration||3);
+      const px=Math.max(8,rect.width),total=Math.max(.1,oldEnd-oldStart);
+      try{if(typeof pushHistory==="function")pushHistory()}catch(_){}
+      const move=ev=>{
+        const delta=((ev.clientX-startX)/px)*total;
+        if(side==="left"){
+          const ns=Math.max(0,Math.min(oldEnd-.05,oldStart+delta));
+          c0.trimStart=typeof akSnapTimelineOffset==="function"?akSnapTimelineOffset(ns,.25):ns;
+        }else{
+          const ne=Math.max(oldStart+.05,oldEnd+delta);
+          c0.trimEnd=typeof akSnapTimelineOffset==="function"?akSnapTimelineOffset(ne,.25):ne;
+        }
+        clipSettings[i]=c0;
+        try{if(typeof renderTimeline==="function")renderTimeline()}catch(_){}
+      };
+      const up=()=>{document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",up);try{if(typeof saveProject==="function")saveProject()}catch(_){}};
+      document.addEventListener("pointermove",move);document.addEventListener("pointerup",up,{once:true});
+    }
+    track.addEventListener("pointerdown",e=>{
+      const h=e.target.closest(".ak-trim-handle");if(h)handle(e,h.dataset.side||"left");
+    });
+    function decorate(){
+      track.querySelectorAll(".clip-block").forEach(b=>{
+        if(b.querySelector(".ak-trim-handle"))return;
+        ["left","right"].forEach(side=>{
+          const h=document.createElement("span");h.className="ak-trim-handle";h.dataset.side=side;
+          h.style.cssText="position:absolute;top:0;bottom:0;width:10px;background:rgba(255,255,255,.35);z-index:15;cursor:ew-resize;touch-action:none";
+          if(side==="left")h.style.left="0";else h.style.right="0";
+          b.style.position="relative";b.appendChild(h);
+        });
+      });
+    }
+    window.akDecorateTrimHandles=decorate;decorate();
+    const old=window.renderTimeline;
+    if(typeof old==="function")window.renderTimeline=function(){const r=old.apply(this,arguments);setTimeout(decorate,0);return r};
+  }
+  window.addEventListener("load",()=>setTimeout(bind,2500));
+})();
