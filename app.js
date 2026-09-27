@@ -1,3 +1,18 @@
+
+var selectedKeyframe=typeof selectedKeyframe!=="undefined"?selectedKeyframe:null;
+function applyKeyframePreview(time){
+  if(typeof keyframes==="undefined"||!keyframes.length)return;
+  const clip=typeof currentIndex==="undefined"?0:currentIndex;
+  const st=typeof keyframeExportState==="function"?keyframeExportState(clip,Number(time)||0):null;
+  if(!st)return;
+  const target=document.getElementById("video");
+  if(target){
+    target.style.transform="translate("+Number(st.x||0)+"%, "+Number(st.y||0)+"%) rotate("+Number(st.rotation||0)+"deg) scale("+Number(st.zoom||1)+")";
+    target.style.opacity=String(st.opacity==null?1:st.opacity);
+  }
+  const ov=document.getElementById("overlay");
+  if(ov){ov.style.transform="translate("+Number(st.x||0)+"%, "+Number(st.y||0)+"%) rotate("+Number(st.rotation||0)+"deg) scale("+Number(st.zoom||1)+")";ov.style.opacity=String(st.opacity==null?1:st.opacity)}
+}
 tools.onclick=e=>{
  var t=e.target; if(t.dataset.chroma){settings().chroma=t.dataset.chroma==="on";msg("Chroma Key "+(settings().chroma?"ON":"OFF")+" ✓")}  if(t.dataset.effect){settings().effect=t.dataset.effect;applyEffectPreview();msg("Effect: "+t.dataset.effect+" ✓")} if(t.dataset.mask){settings().mask=t.dataset.mask;applyMaskPreview();msg("Mask: "+t.dataset.mask+" ✓")}  if(t.id==="applyExport"){exportConfig.width=$("#exQuality").value==="720"?720:1080;exportConfig.height=exportConfig.width===720?405:608;exportConfig.fps=+$("#exFps").value;exportConfig.bitrate=+$("#exBitrate").value;msg("Export settings लागू झाले ✓");} if(t.id==="addKeyframe"){const f=files[currentIndex],c=clipSettings[currentIndex]||{},isImage=f&&f.type.startsWith("image/"),time=isImage?Math.max(0,Math.min(Number(c.duration||photoDuration||5),Number(window.photoPreviewTime||0))):Math.max(Number(c.trimStart||0),Math.min(Number(c.trimEnd??video.duration),video.currentTime));const k={clip:currentIndex,time:time,zoom:settings().zoom,rotation:settings().rotation,opacity:settings().opacity};keyframes.push(k);keyframes.sort((a,b)=>a.clip-b.clip||a.time-b.time);selectedKeyframe=k;$("#kfList").textContent="Keyframes: "+keyframes.filter(k=>k.clip===currentIndex).length;renderKeyframeTracks();msg("Current Time वर Keyframe जोडला ✓")} if(t.dataset.sticker){settings().sticker=t.dataset.sticker;overlay.textContent=(overlay.textContent||"")+" "+t.dataset.sticker;renderOverlayTracks();msg("Sticker जोडला ✓")} if(t.dataset.textanim){settings().textAnimation=t.dataset.textanim;msg("Text animation: "+t.dataset.textanim+" ✓")} if(t.dataset.mask){settings().mask=t.dataset.mask;applyMaskPreview();msg("Mask: "+t.dataset.mask+" ✓")} if(t.id==="clearSticker"){overlay.textContent="";msg("Sticker clear ✓")} if(t.id==="captionStart"){if(!("webkitSpeechRecognition" in window||"SpeechRecognition" in window)){msg("या browser मध्ये Speech Recognition उपलब्ध नाही.",true)}else{const R=window.SpeechRecognition||window.webkitSpeechRecognition,r=new R();r.lang="mr-IN";r.continuous=true;r.onresult=e=>{let x="";for(let i=e.resultIndex;i<e.results.length;i++)x+=e.results[i][0].transcript+" ";overlay.textContent=x.trim();settings().text=x.trim();};r.start();msg("Auto Caption सुरू ✓")}} if(t.id==="kfTime"&&selectedKeyframe){const f=files[selectedKeyframe.clip],c=clipSettings[selectedKeyframe.clip]||{},isImage=f&&f.type.startsWith("image/"),min=isImage?0:Number(c.trimStart||0),max=isImage?Number(c.duration||photoDuration||5):Math.max(min,Number(c.trimEnd??video.duration));selectedKeyframe.time=Math.max(min,Math.min(max,Number(t.value)||0));keyframes.sort((a,b)=>a.clip-b.clip||a.time-b.time);renderKeyframeTracks();if(selectedKeyframe.clip===currentIndex){if(isImage){window.photoPreviewTime=selectedKeyframe.time;applyKeyframePreview(selectedKeyframe.time)}else video.currentTime=selectedKeyframe.time}msg("Keyframe time updated ✓");return} if(["kfZoom","kfRotation","kfOpacity"].includes(t.id)&&selectedKeyframe){const v=Number(t.value);if(t.id==="kfZoom"){$("#kfZoomVal").textContent=v.toFixed(1)+"x";selectedKeyframe.zoom=v}if(t.id==="kfRotation"){$("#kfRotationVal").textContent=v.toFixed(0)+"°";selectedKeyframe.rotation=v}if(t.id==="kfOpacity"){$("#kfOpacityVal").textContent=Math.round(v*100)+"%";selectedKeyframe.opacity=v}applyKeyframePreview(selectedKeyframe.time);renderKeyframeTracks();return} if(t.id==="kfJump"&&selectedKeyframe){const f=files[selectedKeyframe.clip],c=clipSettings[selectedKeyframe.clip]||{},tt=Number(selectedKeyframe.time||0);if(f&&f.type.startsWith("image/")){window.photoPreviewTime=tt;applyKeyframePreview(tt)}else if(selectedKeyframe.clip===currentIndex){video.currentTime=tt}msg("Keyframe वर Jump केले ✓");return} if(t.id==="kfDelete"&&selectedKeyframe){const n=keyframes.indexOf(selectedKeyframe);if(n>=0)keyframes.splice(n,1);selectedKeyframe=null;renderKeyframeTracks();act("keyframes");msg("Keyframe Delete ✓");return} if(t.id==="kfBack"){act("keyframes");return} if(t.id==="kfDuplicate"&&selectedKeyframe){const c=clipSettings[currentIndex]||{},isImage=files[currentIndex]&&files[currentIndex].type.startsWith("image/"),hi=isImage?Number(c.duration||photoDuration||5):Number(c.trimEnd??video.duration),copy={clip:selectedKeyframe.clip,time:Math.min(hi,Number(selectedKeyframe.time||0)+0.5),zoom:selectedKeyframe.zoom,rotation:selectedKeyframe.rotation,opacity:selectedKeyframe.opacity};if(copy.time<=selectedKeyframe.time)copy.time=Math.min(hi,Number(selectedKeyframe.time||0)+0.1);keyframes.push(copy);keyframes.sort((a,b)=>a.clip-b.clip||a.time-b.time);showKeyframeEditor(copy);renderKeyframeTracks();msg("Keyframe Duplicate ✓");return} if(t.id==="kfZoom"&&selectedKeyframe){selectedKeyframe.zoom=+t.value;applyKeyframePreview(selectedKeyframe.time)} if(t.id==="kfRotation"&&selectedKeyframe){selectedKeyframe.rotation=+t.value;applyKeyframePreview(selectedKeyframe.time)} if(t.id==="kfOpacity"&&selectedKeyframe){selectedKeyframe.opacity=+t.value;applyKeyframePreview(selectedKeyframe.time)} if(t.id==="clearKeyframes"){for(let i=keyframes.length-1;i>=0;i--)if(keyframes[i].clip===currentIndex)keyframes.splice(i,1);msg("Keyframes clear ✓");act("keyframes")}
  if(t.dataset.addsticker){addSticker(t.dataset.addsticker);msg("Sticker added ✓");return} if(t.dataset.stickeranim){settings().stickerAnimation=t.dataset.stickeranim;applyStickerAnimationPreview();msg("Sticker Animation: "+t.textContent+" ✓");return} if(t.id==="speedCustom"){settings().speed=+t.value;video.playbackRate=+t.value;$("#speedVal").textContent=t.value+"×"} if(t.id==="adjB"){settings().brightness=+t.value;applyVisualSettings()} if(t.id==="adjC"){settings().contrast=+t.value;applyVisualSettings()} if(t.id==="adjS"){settings().saturation=+t.value;applyVisualSettings()} if(t.id==="adjH"){settings().hue=+t.value;applyVisualSettings()} if(t.id==="adjL"){settings().lightness=+t.value;applyVisualSettings()} if(t.id==="adjBlur"){settings().blur=+t.value;applyVisualSettings()}
@@ -267,8 +282,16 @@ $("#projectFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=n
 function act(a){
  if(!restoringHistory) pushHistory();
  if(!video.src && !currentImage){tools.innerHTML="<b>आधी Photo / Video निवडा.</b>";return}
-  if(a==="keyframes"){tools.innerHTML="<b>Keyframe</b><button id=\"addKeyframe\">Add Keyframe</button><button id=\"clearKeyframes\">Clear Keyframes</button><div id=\"kfList\">Keyframes: "+keyframes.filter(k=>k.clip===currentIndex).length+"</div><div class=\"hint\">Timeline मधील ♦️ वर tap करून Zoom / Rotation / Opacity बदला.</div>";return;}
-if(a==="trim"){
+  if(a==="keyframes"){
+  const k=selectedKeyframe||keyframes.find(x=>x.clip===currentIndex);
+  tools.innerHTML="<b>Keyframe</b><button id=\"addKeyframe\">Add Keyframe</button><button id=\"clearKeyframes\">Clear Keyframes</button><div id=\"kfList\">Keyframes: "+keyframes.filter(x=>x.clip===currentIndex).length+"</div>"+
+  "<div id=\"kfEditor\"><label>Time <input id=\"kfTime\" type=\"range\" min=\"0\" max=\""+(video.duration||photoDuration||5)+"\" step=\".01\" value=\""+(k?k.time:0)+"\"></label><label>Zoom <input id=\"kfZoom\" type=\"range\" min=\"0.5\" max=\"3\" step=\".01\" value=\""+(k?k.zoom:1)+"\"></label><span id=\"kfZoomVal\">"+(k?k.zoom:1).toFixed(1)+"x</span>"+
+  "<label>Rotation <input id=\"kfRotation\" type=\"range\" min=\"-180\" max=\"180\" step=\"1\" value=\""+(k?k.rotation:0)+"\"></label><span id=\"kfRotationVal\">"+(k?k.rotation:0)+"°</span>"+
+  "<label>Opacity <input id=\"kfOpacity\" type=\"range\" min=\"0\" max=\"1\" step=\".01\" value=\""+(k?k.opacity:1)+"\"></label><span id=\"kfOpacityVal\">"+Math.round((k?k.opacity:1)*100)+"%</span>"+
+  "<label>X <input id=\"kfX\" type=\"range\" min=\"-100\" max=\"100\" step=\"1\" value=\""+(k?k.x||0:0)+"\"></label><label>Y <input id=\"kfY\" type=\"range\" min=\"-100\" max=\"100\" step=\"1\" value=\""+(k?k.y||0:0)+"\"></label>"+
+  "<button id=\"kfJump\">Jump</button><button id=\"kfDuplicate\">Duplicate</button><button id=\"kfDelete\">Delete</button><button id=\"kfBack\">Back</button></div>";
+  return;
+}if(a==="trim"){
    const d=currentImage?5:(video.duration||0);
    tools.innerHTML='<div class="tools"><b>✂️ Trim</b><label>Start <input id="ts" type="range" min="0" max="'+d+'" step=".1" value="'+trimStart+'"></label><span id="tsv">'+fmt(trimStart)+'</span><label>End <input id="te" type="range" min="0" max="'+d+'" step=".1" value="'+(trimEnd||d)+'"></label><span id="tev">'+fmt(trimEnd||d)+'</span><button id="applyTrim">Apply</button><div class="hint">Timeline sliders ओढून Trim करा.</div></div>';
  }
@@ -574,7 +597,7 @@ function openMultiTrackEditor(){tools.innerHTML='<b>🎚️ Multi-track</b><butt
   document.addEventListener("input",function(e){
     const ids={kfZoom:"zoom",kfRotation:"rotation",kfOpacity:"opacity",kfX:"x",kfY:"y"};
     const key=ids[e.target&&e.target.id]; if(!key||typeof selectedKeyframe==="undefined"||!selectedKeyframe)return;
-    const k=window.selectedKeyframe;
+    const k=selectedKeyframe;
     k[key]=Number(e.target.value);
     try{
       const c=typeof settings==="function"?settings():null;
@@ -590,7 +613,7 @@ function openMultiTrackEditor(){tools.innerHTML='<b>🎚️ Multi-track</b><butt
     }catch(err){}
   });
   document.addEventListener("change",function(e){
-    if(!/^kf(Zoom|Rotation|Opacity|X|Y)$/.test(e.target&&e.target.id)||!window.selectedKeyframe)return;
+    if(!/^kf(Zoom|Rotation|Opacity|X|Y)$/.test(e.target&&e.target.id)||typeof selectedKeyframe==="undefined"||!selectedKeyframe)return;
     try{if(typeof renderKeyframeTracks==="function")renderKeyframeTracks()}catch(err){}
   });
 })();
