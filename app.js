@@ -722,7 +722,7 @@ function openMultiTrackEditor(){tools.innerHTML='<b>🎚️ Multi-track</b><butt
     p.querySelectorAll("[data-ak2-template]").forEach(b=>b.onclick=()=>applyTemplate(b.dataset.ak2Template));
     p.querySelectorAll("[data-ak2-mask]").forEach(b=>b.onclick=()=>setMask(b.dataset.ak2Mask));
     p.querySelectorAll("[data-ak2-blend]").forEach(b=>b.onclick=()=>setBlend(b.dataset.ak2Blend));
-    $id("akSmartCut").onclick=smartAutoCut; $id("akExportCheck").onclick=exportReadiness;
+    $id("akSmartCut").onclick=smartAutoCut; $id("akExportCheck").onclick=()=>{exportReadiness();return window.akExportSelfTest&&window.akExportSelfTest()};
   }
 
   window.addEventListener("load",()=>setTimeout(advancedPanel,450));
