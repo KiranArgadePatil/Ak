@@ -74,6 +74,30 @@ function setupRealPIPControls(){const b=document.getElementById("overlay");if(!b
 
 function setupMultiTrackRows(){const root=document.getElementById("overlayTracks");if(!root)return;["VIDEO 1","VIDEO 2","TEXT","STICKER","AUDIO","CAPTION","EFFECT"].forEach(label=>{if(root.querySelector('[data-track="'+label+'"]'))return;const r=document.createElement("div");r.className="track-row";r.dataset.track=label;r.innerHTML="<b>"+label+"</b><div style=\"position:relative;min-height:28px;background:#151923\"></div>";root.appendChild(r)})}
 function splitCaptionAtPlayhead(){const now=typeof video!=="undefined"?Number(video.currentTime||0):0;const a=captionState();const x=a.find(x=>now>x.start&&now<x.end);if(!x)return;const old=x.end;x.end=now;a.push({text:x.text,start:now,end:old});a.sort((p,q)=>p.start-q.start);renderCaptions();msg("Caption split ✓")}
+function curveSpeed(cs,current,start,end){
+ const c=cs||{};
+ const preset=typeof c.speedCurvePreset==="string"?c.speedCurvePreset:(typeof c.speedCurve==="string"?c.speedCurve:"normal");
+ const t=Math.max(0,Math.min(1,(Number(current)-Number(start||0))/Math.max(.001,Number(end||1)-Number(start||0))));
+ const presets={normal:[1,1,1,1,1],montage:[1,1.5,.7,1.5,1],bullet:[1,2,2,2,1],jump:[.6,1.8,.8,2,.7],hero:[.5,.7,1,1.5,2],flash:[1,3,.5,3,1],smooth:[.8,1,1.2,1,.8]};
+ let pts=Array.isArray(c.speedCurve)&&c.speedCurve.every(x=>typeof x==="number")?c.speedCurve:presets[preset]||presets.normal;
+ if(pts.length<2)pts=presets.normal;
+ const pos=t*(pts.length-1),i=Math.min(pts.length-2,Math.floor(pos)),f=pos-i;
+ const a=Math.max(.1,Number(pts[i])||1),b=Math.max(.1,Number(pts[i+1])||1);
+ return a+(b-a)*(f*f*(3-2*f));
+}
+function applySpeedCurvePreview(){
+ if(typeof video==="undefined"||!video.src)return;
+ const cs=(typeof clipSettings!=="undefined"&&clipSettings[currentIndex])||settings();
+ const rate=curveSpeed(cs,video.currentTime||0,Number(cs.trimStart||0),Number(cs.trimEnd||video.duration||1));
+ try{video.playbackRate=rate;video.preservesPitch=true}catch(e){}
+ const v=document.getElementById("speedVal");if(v)v.textContent=rate.toFixed(2)+"×";
+}
+function bindSpeedCurvePreview(){
+ if(typeof video==="undefined"||video.dataset.speedCurveBound)return;
+ video.dataset.speedCurveBound="1";
+ video.addEventListener("timeupdate",applySpeedCurvePreview);
+ video.addEventListener("play",applySpeedCurvePreview);
+}
 function advancedEditorPack(){bindSpeedCurvePreview();
  const c=typeof settings==="function"?settings():{};
  c.speedCurve=c.speedCurve||[{t:0,v:1},{t:.25,v:1},{t:.5,v:1},{t:.75,v:1},{t:1,v:1}];
