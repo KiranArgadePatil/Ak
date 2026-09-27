@@ -1326,3 +1326,42 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   }
   window.addEventListener("load",()=>setTimeout(bind,2500));
 })();
+
+
+/* AK TRIM PREVIEW SYNC v1 */
+(function(){
+  function bind(){
+    const track=document.getElementById("track");if(!track||track.dataset.trimPreviewBound)return;
+    track.dataset.trimPreviewBound="1";
+    track.addEventListener("pointerdown",e=>{
+      const h=e.target.closest(".ak-trim-handle");if(!h)return;
+      const b=h.closest(".clip-block");if(!b)return;
+      const i=Number(b.dataset.index),c=(clipSettings&&clipSettings[i])||{},f=files[i];
+      if(!Number.isFinite(i)||!f)return;
+      const start=Number(c.trimStart||0),end=Number(c.trimEnd??f.duration||3);
+      const preview=t=>{
+        if(typeof currentIndex!=="undefined")currentIndex=i;
+        if(f.type&&f.type.startsWith("image/")){
+          window.photoPreviewTime=Math.max(start,Math.min(end,t));
+          try{if(typeof renderPreview==="function")renderPreview()}catch(_){}
+        }else if(typeof video!=="undefined"&&video){
+          const safe=Math.max(start,Math.min(end,t));
+          try{video.currentTime=safe}catch(_){}
+          try{if(typeof applyKeyframePreview==="function")applyKeyframePreview(safe)}catch(_){}
+        }
+        try{if(typeof akUpdateTimelinePlayhead==="function")akUpdateTimelinePlayhead()}catch(_){}
+      };
+      preview(h.dataset.side==="left"?start:end);
+    });
+    if(typeof video!=="undefined"&&video&&!video.dataset.trimClampBound){
+      video.dataset.trimClampBound="1";
+      video.addEventListener("timeupdate",()=>{
+        const c=(clipSettings&&clipSettings[currentIndex])||{};
+        const st=Number(c.trimStart||0),en=Number(c.trimEnd||video.duration||0);
+        if(video.currentTime<st)try{video.currentTime=st}catch(_){}
+        if(en>st&&video.currentTime>en)try{video.currentTime=st}catch(_){}
+      });
+    }
+  }
+  window.addEventListener("load",()=>setTimeout(bind,2700));
+})();
