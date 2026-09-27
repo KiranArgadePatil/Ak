@@ -1013,3 +1013,49 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
     return r;
   };
 })();
+
+
+/* AK TRACK LOCK + MUTE/SOLO v1 */
+(function(){
+  const state=window.akTrackState||{VIDEO1:{locked:false,muted:false,solo:false},VIDEO2:{locked:false,muted:false,solo:false},TEXT:{locked:false,muted:false,solo:false},AUDIO:{locked:false,muted:false,solo:false}};
+  window.akTrackState=state;
+  function ensure(){
+    const host=document.getElementById("track"); if(!host)return;
+    let bar=document.getElementById("akTrackControls");
+    if(!bar){
+      bar=document.createElement("div");bar.id="akTrackControls";bar.style.cssText="display:flex;gap:6px;flex-wrap:wrap;padding:6px;border-bottom:1px solid rgba(128,128,128,.25)";
+      host.parentElement&&host.parentElement.insertBefore(bar,host);
+    }
+    bar.innerHTML="";
+    Object.keys(state).forEach(name=>{
+      const s=state[name],wrap=document.createElement("span");
+      wrap.style.cssText="display:inline-flex;align-items:center;gap:3px;margin-right:5px";
+      const label=document.createElement("b");label.textContent=name==="VIDEO1"?"VIDEO 1":name==="VIDEO2"?"VIDEO 2":name;label.style.fontSize="11px";
+      const lock=document.createElement("button");lock.type="button";lock.textContent=s.locked?"🔒":"🔓";lock.title="Lock track";
+      const mute=document.createElement("button");mute.type="button";mute.textContent=s.muted?"🔇":"🔊";mute.title="Mute track";
+      const solo=document.createElement("button");solo.type="button";solo.textContent=s.solo?"S":"S";solo.title="Solo track";solo.style.fontWeight=s.solo?"700":"400";
+      lock.onclick=()=>{s.locked=!s.locked;apply();};
+      mute.onclick=()=>{s.muted=!s.muted;apply();};
+      solo.onclick=()=>{s.solo=!s.solo;apply();};
+      wrap.append(label,lock,mute,solo);bar.appendChild(wrap);
+    });
+    apply();
+  }
+  function apply(){
+    const host=document.getElementById("track");if(!host)return;
+    host.dataset.akTrackState=JSON.stringify(state);
+    host.querySelectorAll(".clip-block").forEach(b=>{
+      const i=Number(b.dataset.index),type=(files[i]&&files[i].type)||"";
+      const key=type.startsWith("audio/")?"AUDIO":"VIDEO1";
+      const st=state[key]||state.VIDEO1;
+      b.style.opacity=st.muted?.45:1;
+      b.style.pointerEvents=st.locked?"none":"";
+      b.dataset.locked=st.locked?"1":"0";
+    });
+  }
+  window.akTrackControls=ensure;
+  window.akIsTrackLocked=function(key){return !!(state[key]&&state[key].locked)};
+  window.addEventListener("load",()=>setTimeout(ensure,1100));
+  const old=window.renderTimeline;
+  if(typeof old==="function")window.renderTimeline=function(){const r=old.apply(this,arguments);setTimeout(ensure,0);return r};
+})();
