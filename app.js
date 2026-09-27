@@ -1762,3 +1762,64 @@ if(typeof video!=="undefined"&&!video.dataset.kfPreviewBound){
   }
   window.addEventListener("load",()=>setTimeout(bind,2900));
 })();
+
+
+/* AK TIMELINE SPEED CURVE KEYFRAMES v1 */
+(function(){
+  function paint(){
+    const track=document.getElementById("track"); if(!track)return;
+    track.querySelectorAll(".clip-block").forEach(block=>{
+      if(block.querySelector(".ak-timeline-curve"))return;
+      const i=Number(block.dataset.clip); if(!Number.isFinite(i))return;
+      const cs=(Array.isArray(clipSettings)&&clipSettings[i])||{};
+      const pts=curvePoints(cs); if(!pts||pts.length<2)return;
+      block.style.position="relative"; block.style.overflow="visible";
+      const wrap=document.createElement("div"); wrap.className="ak-timeline-curve";
+      wrap.style.cssText="position:absolute;left:4px;right:4px;bottom:3px;height:34px;pointer-events:none;z-index:4";
+      const svg=document.createElementNS("http://www.w3.org/2000/svg","svg");
+      svg.setAttribute("viewBox","0 0 100 34"); svg.setAttribute("preserveAspectRatio","none");
+      svg.style.cssText="width:100%;height:100%;overflow:visible";
+      const poly=document.createElementNS("http://www.w3.org/2000/svg","polyline");
+      poly.setAttribute("fill","none");poly.setAttribute("stroke","currentColor");poly.setAttribute("stroke-width","2");poly.setAttribute("points",pts.map((v,j)=>(j*100/(pts.length-1))+","+(34-(v/4)*30)).join(" "));
+      svg.appendChild(poly);wrap.appendChild(svg);
+      const layer=document.createElement("div");layer.style.cssText="position:absolute;inset:0;pointer-events:none";
+      pts.forEach((v,j)=>{
+        const d=document.createElement("button");d.type="button";d.textContent="";
+        d.style.cssText="position:absolute;width:12px;height:12px;border-radius:50%;padding:0;transform:translate(-50%,-50%);left:"+(j*100/(pts.length-1))+"%;top:"+(100-(v/4)*88)+"%;pointer-events:auto;touch-action:none;cursor:ns-resize;border:1px solid currentColor;background:inherit";
+        d.title="Speed "+v.toFixed(2)+"×";d.setAttribute("aria-label","Speed "+v.toFixed(2)+"x");
+        d.onpointerdown=e=>{e.preventDefault();e.stopPropagation();try{d.setPointerCapture(e.pointerId)}catch(_){}};
+        d.onpointermove=e=>{
+          if(!d.hasPointerCapture||!d.hasPointerCapture(e.pointerId))return;
+          e.preventDefault();e.stopPropagation();
+          const r=wrap.getBoundingClientRect(),y=Math.max(0,Math.min(r.height,e.clientY-r.top));
+          const nv=Math.round(Math.max(.1,Math.min(4,4*(1-y/r.height)))*20)/20;
+          const target=(Array.isArray(clipSettings)&&clipSettings[i])||(clipSettings[i]={});
+          const cur=curvePoints(target);cur[j]=nv;target.speedCurvePreset="custom";target.speedCurve=cur.slice();
+          d.title="Speed "+nv.toFixed(2)+"×";
+          poly.setAttribute("points",cur.map((q,k)=>(k*100/(cur.length-1))+","+(34-(q/4)*30)).join(" "));
+          layer.querySelectorAll("button").forEach((q,k)=>{q.style.top=(100-(cur[k]/4)*88)+"%";});
+          if(i===currentIndex)applySpeedCurvePreview();
+        };
+        d.onpointerup=()=>{try{if(typeof saveProject==="function")saveProject()}catch(_){}};
+        layer.appendChild(d);
+      });
+      wrap.appendChild(layer);block.appendChild(wrap);
+      if(Array.isArray(keyframes)){
+        keyframes.filter(k=>k.clip===i).forEach(k=>{
+          const f=files&&files[i],cc=(clipSettings&&clipSettings[i])||{};
+          const start=Number(cc.trimStart||0),end=Number(cc.trimEnd??(f&&f.type&&f.type.startsWith("image/")?Number(cc.duration||photoDuration||3):video.duration||3));
+          const span=Math.max(.001,end-start),pct=Math.max(0,Math.min(100,((Number(k.time)-start)/span)*100));
+          const dot=document.createElement("span");dot.title="Keyframe "+Number(k.time).toFixed(2)+"s";
+          dot.style.cssText="position:absolute;left:"+pct+"%;bottom:0;width:8px;height:8px;transform:translate(-50%,50%) rotate(45deg);background:currentColor;pointer-events:none";
+          block.appendChild(dot);
+        });
+      }
+    });
+  }
+  window.akRenderTimelineSpeedCurves=paint;
+  const run=()=>setTimeout(paint,20);
+  window.addEventListener("load",()=>setTimeout(paint,1800));
+  const mo=new MutationObserver(run);
+  window.addEventListener("load",()=>{const t=document.getElementById("track");if(t)mo.observe(t,{childList:true,subtree:true})});
+  setInterval(paint,1200);
+})();
