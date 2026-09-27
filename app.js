@@ -1,7 +1,7 @@
 tools.onclick=e=>{
- var t=e.target; if(t.dataset.chroma){settings().chroma=t.dataset.chroma==="on";msg("Chroma Key "+(settings().chroma?"ON":"OFF")+" ✓")}  if(t.dataset.effect){settings().effect=t.dataset.effect;applyEffectPreview();msg("Effect: "+t.dataset.effect+" ✓")} if(t.dataset.mask){settings().mask=t.dataset.mask;applyMaskPreview();msg("Mask: "+t.dataset.mask+" ✓")}  if(t.id==="applyExport"){exportConfig.width=$("#exQuality").value==="720"?720:1080;exportConfig.height=exportConfig.width===720?405:608;exportConfig.fps=+$("#exFps").value;exportConfig.bitrate=+$("#exBitrate").value;msg("Export settings लागू झाले ✓");} if(t.id==="kfApply"){const k=selectedKeyframe;if(!k){msg("आधी ◆ Keyframe select करा.",true);return}pushHistory();k.zoom=+$("#kfZoom").value;k.rotation=+$("#kfRotation").value;k.opacity=+$("#kfOpacity").value;k.x=+$("#kfX").value;k.y=+$("#kfY").value;renderKeyframeTracks();applyVisualSettings();msg("Keyframe values लागू ✓")} if(t.id==="addKeyframe"){const f=files[currentIndex],c=clipSettings[currentIndex]||{},isImage=f&&f.type.startsWith("image/"),time=isImage?Math.max(0,Math.min(Number(c.duration||photoDuration||5),Number(window.photoPreviewTime||0))):Math.max(Number(c.trimStart||0),Math.min(Number(c.trimEnd??video.duration),video.currentTime));const k={clip:currentIndex,time:time,zoom:settings().zoom,rotation:settings().rotation,opacity:settings().opacity};keyframes.push(k);keyframes.sort((a,b)=>a.clip-b.clip||a.time-b.time);selectedKeyframe=k;$("#kfList").textContent="Keyframes: "+keyframes.filter(k=>k.clip===currentIndex).length;renderKeyframeTracks();msg("Current Time वर Keyframe जोडला ✓")} if(t.dataset.sticker){settings().sticker=t.dataset.sticker;overlay.textContent=(overlay.textContent||"")+" "+t.dataset.sticker;renderOverlayTracks();msg("Sticker जोडला ✓")} if(t.dataset.textanim){settings().textAnimation=t.dataset.textanim;msg("Text animation: "+t.dataset.textanim+" ✓")} if(t.dataset.mask){settings().mask=t.dataset.mask;applyMaskPreview();msg("Mask: "+t.dataset.mask+" ✓")} if(t.id==="clearSticker"){overlay.textContent="";msg("Sticker clear ✓")} if(t.id==="captionStart"){if(!("webkitSpeechRecognition" in window||"SpeechRecognition" in window)){msg("या browser मध्ये Speech Recognition उपलब्ध नाही.",true)}else{const R=window.SpeechRecognition||window.webkitSpeechRecognition,r=new R();r.lang="mr-IN";r.continuous=true;r.onresult=e=>{let x="";for(let i=e.resultIndex;i<e.results.length;i++)x+=e.results[i][0].transcript+" ";overlay.textContent=x.trim();settings().text=x.trim();};r.start();msg("Auto Caption सुरू ✓")}} if(t.id==="kfTime"&&selectedKeyframe){const f=files[selectedKeyframe.clip],c=clipSettings[selectedKeyframe.clip]||{},isImage=f&&f.type.startsWith("image/"),min=isImage?0:Number(c.trimStart||0),max=isImage?Number(c.duration||photoDuration||5):Math.max(min,Number(c.trimEnd??video.duration));selectedKeyframe.time=Math.max(min,Math.min(max,Number(t.value)||0));keyframes.sort((a,b)=>a.clip-b.clip||a.time-b.time);renderKeyframeTracks();if(selectedKeyframe.clip===currentIndex){if(isImage){window.photoPreviewTime=selectedKeyframe.time;applyKeyframePreview(selectedKeyframe.time)}else video.currentTime=selectedKeyframe.time}msg("Keyframe time updated ✓");return} if(["kfZoom","kfRotation","kfOpacity"].includes(t.id)&&selectedKeyframe){const v=Number(t.value);if(t.id==="kfZoom"){$("#kfZoomVal").textContent=v.toFixed(1)+"x";selectedKeyframe.zoom=v}if(t.id==="kfRotation"){$("#kfRotationVal").textContent=v.toFixed(0)+"°";selectedKeyframe.rotation=v}if(t.id==="kfOpacity"){$("#kfOpacityVal").textContent=Math.round(v*100)+"%";selectedKeyframe.opacity=v}applyKeyframePreview(selectedKeyframe.time);renderKeyframeTracks();return} if(t.id==="kfJump"&&selectedKeyframe){const f=files[selectedKeyframe.clip],c=clipSettings[selectedKeyframe.clip]||{},tt=Number(selectedKeyframe.time||0);if(f&&f.type.startsWith("image/")){window.photoPreviewTime=tt;applyKeyframePreview(tt)}else if(selectedKeyframe.clip===currentIndex){video.currentTime=tt}msg("Keyframe वर Jump केले ✓");return} if(t.id==="kfDelete"&&selectedKeyframe){const n=keyframes.indexOf(selectedKeyframe);if(n>=0)keyframes.splice(n,1);selectedKeyframe=null;renderKeyframeTracks();act("keyframes");msg("Keyframe Delete ✓");return} if(t.id==="kfBack"){act("keyframes");return} if(t.id==="kfDuplicate"&&selectedKeyframe){const c=clipSettings[currentIndex]||{},isImage=files[currentIndex]&&files[currentIndex].type.startsWith("image/"),hi=isImage?Number(c.duration||photoDuration||5):Number(c.trimEnd??video.duration),copy={clip:selectedKeyframe.clip,time:Math.min(hi,Number(selectedKeyframe.time||0)+0.5),zoom:selectedKeyframe.zoom,rotation:selectedKeyframe.rotation,opacity:selectedKeyframe.opacity};if(copy.time<=selectedKeyframe.time)copy.time=Math.min(hi,Number(selectedKeyframe.time||0)+0.1);keyframes.push(copy);keyframes.sort((a,b)=>a.clip-b.clip||a.time-b.time);showKeyframeEditor(copy);renderKeyframeTracks();msg("Keyframe Duplicate ✓");return} if(t.id==="kfZoom"&&selectedKeyframe){selectedKeyframe.zoom=+t.value;applyKeyframePreview(selectedKeyframe.time)} if(t.id==="kfRotation"&&selectedKeyframe){selectedKeyframe.rotation=+t.value;applyKeyframePreview(selectedKeyframe.time)} if(t.id==="kfOpacity"&&selectedKeyframe){selectedKeyframe.opacity=+t.value;applyKeyframePreview(selectedKeyframe.time)} if(t.id==="clearKeyframes"){for(let i=keyframes.length-1;i>=0;i--)if(keyframes[i].clip===currentIndex)keyframes.splice(i,1);msg("Keyframes clear ✓");act("keyframes")}
+ var t=e.target; if(t.dataset.chroma){settings().chroma=t.dataset.chroma==="on";msg("Chroma Key "+(settings().chroma?"ON":"OFF")+" ✓")}  if(t.dataset.effect){settings().effect=t.dataset.effect;applyEffectPreview();msg("Effect: "+t.dataset.effect+" ✓")} if(t.dataset.mask){settings().mask=t.dataset.mask;applyMaskPreview();msg("Mask: "+t.dataset.mask+" ✓")}  if(t.id==="applyExport"){exportConfig.width=$("#exQuality").value==="720"?720:1080;exportConfig.height=exportConfig.width===720?405:608;exportConfig.fps=+$("#exFps").value;exportConfig.bitrate=+$("#exBitrate").value;msg("Export settings लागू झाले ✓");} if(t.id==="addKeyframe"){const f=files[currentIndex],c=clipSettings[currentIndex]||{},isImage=f&&f.type.startsWith("image/"),time=isImage?Math.max(0,Math.min(Number(c.duration||photoDuration||5),Number(window.photoPreviewTime||0))):Math.max(Number(c.trimStart||0),Math.min(Number(c.trimEnd??video.duration),video.currentTime));const k={clip:currentIndex,time:time,zoom:settings().zoom,rotation:settings().rotation,opacity:settings().opacity};keyframes.push(k);keyframes.sort((a,b)=>a.clip-b.clip||a.time-b.time);selectedKeyframe=k;$("#kfList").textContent="Keyframes: "+keyframes.filter(k=>k.clip===currentIndex).length;renderKeyframeTracks();msg("Current Time वर Keyframe जोडला ✓")} if(t.dataset.sticker){settings().sticker=t.dataset.sticker;overlay.textContent=(overlay.textContent||"")+" "+t.dataset.sticker;renderOverlayTracks();msg("Sticker जोडला ✓")} if(t.dataset.textanim){settings().textAnimation=t.dataset.textanim;msg("Text animation: "+t.dataset.textanim+" ✓")} if(t.dataset.mask){settings().mask=t.dataset.mask;applyMaskPreview();msg("Mask: "+t.dataset.mask+" ✓")} if(t.id==="clearSticker"){overlay.textContent="";msg("Sticker clear ✓")} if(t.id==="captionStart"){if(!("webkitSpeechRecognition" in window||"SpeechRecognition" in window)){msg("या browser मध्ये Speech Recognition उपलब्ध नाही.",true)}else{const R=window.SpeechRecognition||window.webkitSpeechRecognition,r=new R();r.lang="mr-IN";r.continuous=true;r.onresult=e=>{let x="";for(let i=e.resultIndex;i<e.results.length;i++)x+=e.results[i][0].transcript+" ";overlay.textContent=x.trim();settings().text=x.trim();};r.start();msg("Auto Caption सुरू ✓")}} if(t.id==="kfTime"&&selectedKeyframe){const f=files[selectedKeyframe.clip],c=clipSettings[selectedKeyframe.clip]||{},isImage=f&&f.type.startsWith("image/"),min=isImage?0:Number(c.trimStart||0),max=isImage?Number(c.duration||photoDuration||5):Math.max(min,Number(c.trimEnd??video.duration));selectedKeyframe.time=Math.max(min,Math.min(max,Number(t.value)||0));keyframes.sort((a,b)=>a.clip-b.clip||a.time-b.time);renderKeyframeTracks();if(selectedKeyframe.clip===currentIndex){if(isImage){window.photoPreviewTime=selectedKeyframe.time;applyKeyframePreview(selectedKeyframe.time)}else video.currentTime=selectedKeyframe.time}msg("Keyframe time updated ✓");return} if(["kfZoom","kfRotation","kfOpacity"].includes(t.id)&&selectedKeyframe){const v=Number(t.value);if(t.id==="kfZoom"){$("#kfZoomVal").textContent=v.toFixed(1)+"x";selectedKeyframe.zoom=v}if(t.id==="kfRotation"){$("#kfRotationVal").textContent=v.toFixed(0)+"°";selectedKeyframe.rotation=v}if(t.id==="kfOpacity"){$("#kfOpacityVal").textContent=Math.round(v*100)+"%";selectedKeyframe.opacity=v}applyKeyframePreview(selectedKeyframe.time);renderKeyframeTracks();return} if(t.id==="kfJump"&&selectedKeyframe){const f=files[selectedKeyframe.clip],c=clipSettings[selectedKeyframe.clip]||{},tt=Number(selectedKeyframe.time||0);if(f&&f.type.startsWith("image/")){window.photoPreviewTime=tt;applyKeyframePreview(tt)}else if(selectedKeyframe.clip===currentIndex){video.currentTime=tt}msg("Keyframe वर Jump केले ✓");return} if(t.id==="kfDelete"&&selectedKeyframe){const n=keyframes.indexOf(selectedKeyframe);if(n>=0)keyframes.splice(n,1);selectedKeyframe=null;renderKeyframeTracks();act("keyframes");msg("Keyframe Delete ✓");return} if(t.id==="kfBack"){act("keyframes");return} if(t.id==="kfDuplicate"&&selectedKeyframe){const c=clipSettings[currentIndex]||{},isImage=files[currentIndex]&&files[currentIndex].type.startsWith("image/"),hi=isImage?Number(c.duration||photoDuration||5):Number(c.trimEnd??video.duration),copy={clip:selectedKeyframe.clip,time:Math.min(hi,Number(selectedKeyframe.time||0)+0.5),zoom:selectedKeyframe.zoom,rotation:selectedKeyframe.rotation,opacity:selectedKeyframe.opacity};if(copy.time<=selectedKeyframe.time)copy.time=Math.min(hi,Number(selectedKeyframe.time||0)+0.1);keyframes.push(copy);keyframes.sort((a,b)=>a.clip-b.clip||a.time-b.time);showKeyframeEditor(copy);renderKeyframeTracks();msg("Keyframe Duplicate ✓");return} if(t.id==="kfZoom"&&selectedKeyframe){selectedKeyframe.zoom=+t.value;applyKeyframePreview(selectedKeyframe.time)} if(t.id==="kfRotation"&&selectedKeyframe){selectedKeyframe.rotation=+t.value;applyKeyframePreview(selectedKeyframe.time)} if(t.id==="kfOpacity"&&selectedKeyframe){selectedKeyframe.opacity=+t.value;applyKeyframePreview(selectedKeyframe.time)} if(t.id==="clearKeyframes"){for(let i=keyframes.length-1;i>=0;i--)if(keyframes[i].clip===currentIndex)keyframes.splice(i,1);msg("Keyframes clear ✓");act("keyframes")}
  if(t.dataset.addsticker){addSticker(t.dataset.addsticker);msg("Sticker added ✓");return} if(t.dataset.stickeranim){settings().stickerAnimation=t.dataset.stickeranim;applyStickerAnimationPreview();msg("Sticker Animation: "+t.textContent+" ✓");return} if(t.id==="speedCustom"){settings().speed=+t.value;video.playbackRate=+t.value;$("#speedVal").textContent=t.value+"×"} if(t.id==="adjB"){settings().brightness=+t.value;applyVisualSettings()} if(t.id==="adjC"){settings().contrast=+t.value;applyVisualSettings()} if(t.id==="adjS"){settings().saturation=+t.value;applyVisualSettings()} if(t.id==="adjH"){settings().hue=+t.value;applyVisualSettings()} if(t.id==="adjL"){settings().lightness=+t.value;applyVisualSettings()} if(t.id==="adjBlur"){settings().blur=+t.value;applyVisualSettings()}
- if(t.dataset.v && video.src){playbackSpeed=+t.dataset.v;settings().speed=playbackSpeed;video.playbackRate=playbackSpeed;msg("Speed: "+playbackSpeed+"×")} if(t.dataset.curve){const name=t.dataset.curve;settings().speedCurvePreset=name==="none"?"normal":name;settings().speedCurve=name==="none"?null:name;applySpeedCurvePreview();msg("Speed Curve: "+(name==="none"?"Normal":name)+" ✓")} if(t.dataset.customcurve){const raw=prompt("Custom Speed Curve values लिहा (उदा. 0.5,1,2,1,0.75)", "0.5,1,2,1,0.75");if(raw){const pts=raw.split(",").map(Number).filter(Number.isFinite).map(v=>Math.max(.1,Math.min(4,v)));if(pts.length>=2){settings().speedCurvePreset="custom";settings().speedCurve=pts;applySpeedCurvePreview();msg("Custom Speed Curve ✓")}else msg("किमान 2 values द्या.",true)}}
+ if(t.dataset.v && video.src){playbackSpeed=+t.dataset.v;settings().speed=playbackSpeed;video.playbackRate=playbackSpeed;msg("Speed: "+playbackSpeed+"×")} if(t.dataset.curve){setSpeedCurvePreset(t.dataset.curve);return;}
  if(t.dataset.f!==undefined && video.src){video.style.filter=t.dataset.f;settings().filter=t.dataset.f;}
  if(t.dataset.t){window.transitionType=t.dataset.t;settings().transition=t.dataset.t;renderTransitionTracks();msg("Transition: "+t.dataset.t+" ✓")} if(t.id==="trDuration"){settings().transitionDuration=Number(t.value);$("#trDurationVal").textContent=Number(t.value).toFixed(1)+"s";renderTransitionTracks();return}
  if(t.id==="trZoom"){settings().zoom=+t.value;applyVisualSettings();return} if(t.id==="trRot"){settings().rotation=+t.value;applyVisualSettings();return} if(t.id==="trOpacity"){settings().opacity=+t.value;applyVisualSettings();return} if(t.id==="mirrorBtn"){settings().mirror=!settings().mirror;applyVisualSettings();msg("Mirror "+(settings().mirror?"ON":"OFF"));return} if(t.id==="zoom"){zoom=+t.value;settings().zoom=zoom;applyVisualSettings();msg("Zoom: "+zoom+"×")}
@@ -10,7 +10,7 @@ tools.onclick=e=>{
  if(t.id==="clearText"){overlay.textContent="";settings().text="";renderOverlayTracks();}
  if(t.id==="applyTrim"){
    const s=parseFloat($("#ts").value),en=parseFloat($("#te").value);
-   if(s>=0&&en>s&&en<=(currentImage?5:video.duration)){trimStart=s;trimEnd=en;const cs=(typeof clipSettings!=="undefined"&&clipSettings[currentIndex])||(typeof settings==="function"?settings():null);if(cs){cs.trimStart=s;cs.trimEnd=en}if(video.src)video.currentTime=s;renderTimeline();renderKeyframeTracks();renderTransitionTracks&&renderTransitionTracks();msg("Trim सेट: "+fmt(s)+" → "+fmt(en))}
+   if(s>=0&&en>s&&en<=(currentImage?5:video.duration)){trimStart=s;trimEnd=en;if(video.src)video.currentTime=s;renderTimeline();renderKeyframeTracks();msg("Trim सेट: "+fmt(s)+" → "+fmt(en))}
    else msg("Start/End चुकीचे आहेत.",true)
  }
  if(t.id==="addSplit"){
@@ -58,6 +58,31 @@ async function speechToTextCaptions(){
  rec.onend=()=>{renderCaptions();msg("📝 Speech captions तयार ✓ "+heard+" lines")};
  try{rec.start();msg("🎤 बोलणे ऐकत आहे… Video Play करून बोला/चालवा.")}catch(e){msg("Speech recognition सुरू झाले नाही.",true)}
 }
+function curveSpeed(cs,current,start,end){
+ const c=cs||{};const preset=typeof c.speedCurvePreset==="string"?c.speedCurvePreset:"normal";
+ const t=Math.max(0,Math.min(1,(Number(current)-Number(start||0))/Math.max(.001,Number(end||1)-Number(start||0))));
+ const presets={normal:[1,1,1,1,1],montage:[1,1.5,.7,1.5,1],bullet:[1,2,2,2,1],jump:[.6,1.8,.8,2,.7],hero:[.5,.7,1,1.5,2],flash:[1,3,.5,3,1],smooth:[.8,1,1.2,1,.8]};
+ const pts=Array.isArray(c.speedCurve)&&c.speedCurve.length>=2?c.speedCurve:presets[preset]||presets.normal;
+ const pos=t*(pts.length-1),i=Math.min(pts.length-2,Math.floor(pos)),f=pos-i;
+ const a=Math.max(.1,Math.min(4,Number(pts[i])||1)),bb=Math.max(.1,Math.min(4,Number(pts[i+1])||1));
+ return a+(bb-a)*(f*f*(3-2*f));
+}
+function applySpeedCurvePreview(){
+ if(typeof video==="undefined"||!video.src)return;
+ const cs=(typeof clipSettings!=="undefined"&&clipSettings[currentIndex])||settings();
+ const rate=curveSpeed(cs,video.currentTime||0,Number(cs.trimStart||0),Number(cs.trimEnd||video.duration||1));
+ try{video.playbackRate=rate;video.preservesPitch=true}catch(e){}
+ const v=document.getElementById("speedVal");if(v)v.textContent=rate.toFixed(2)+"x";
+}
+function bindSpeedCurvePreview(){
+ if(typeof video==="undefined"||video.dataset.speedCurveBound)return;
+ video.dataset.speedCurveBound="1";video.addEventListener("timeupdate",applySpeedCurvePreview);video.addEventListener("play",applySpeedCurvePreview);
+}
+function setSpeedCurvePreset(name){
+ const c=typeof settings==="function"?settings():{};
+ const p={normal:[1,1,1,1,1],montage:[1,1.5,.7,1.5,1],hero:[.5,.7,1,1.5,2],bullet:[1,2,2,2,1],jump:[.6,1.8,.8,2,.7],flash:[1,3,.5,3,1],smooth:[.8,1,1.2,1,.8]};
+ c.speedCurvePreset=name;c.speedCurve=p[name]||p.normal;bindSpeedCurvePreview();applySpeedCurvePreview();msg("⏩ Speed Curve: "+name+" ✓");
+}
 function openCaptionEditor(){tools.innerHTML='<b>📝 Captions</b><button id="speechCaptions">🎤 Speech → Captions</button><button id="autoCaptionVideo">🎬 Auto Caption Video</button><button id="clearCaptions">🗑️ Clear Captions</button><button id="autoCaptionDraft">✨ Auto Caption Track</button><button id="addCaptionPrompt">＋ Add Caption</button><button id="splitCaption">✂️ Split at Playhead</button><label>Style <select id="capSize"><option value="24">Small</option><option value="34" selected>Medium</option><option value="46">Large</option></select></label><small>Browser-only draft caption track; speech-to-text can be connected later.</small>';document.getElementById("speechCaptions").onclick=speechToTextCaptions;document.getElementById("autoCaptionVideo").onclick=autoCaptionFromCurrentVideo;document.getElementById("clearCaptions").onclick=clearAllCaptions;document.getElementById("autoCaptionDraft").onclick=autoCaptionDraft;document.getElementById("addCaptionPrompt").onclick=addCaptionFromPrompt;document.getElementById("splitCaption").onclick=splitCaptionAtPlayhead;document.getElementById("capSize").onchange=e=>{const c=typeof settings==="function"?settings():{};c.captionStyle=c.captionStyle||{};c.captionStyle.size=Number(e.target.value);renderCaptions()}}
 function captionState(){const c=typeof settings==="function"?settings():{};if(!Array.isArray(c.captions))c.captions=[];return c.captions}
 function addCaption(text,start,end){const a=captionState();a.push({text:String(text||""),start:Number(start||0),end:Number(end||Number(start||0)+2)});a.sort((x,y)=>x.start-y.start);renderCaptions();renderOverlayTracks()}
@@ -74,31 +99,7 @@ function setupRealPIPControls(){const b=document.getElementById("overlay");if(!b
 
 function setupMultiTrackRows(){const root=document.getElementById("overlayTracks");if(!root)return;["VIDEO 1","VIDEO 2","TEXT","STICKER","AUDIO","CAPTION","EFFECT"].forEach(label=>{if(root.querySelector('[data-track="'+label+'"]'))return;const r=document.createElement("div");r.className="track-row";r.dataset.track=label;r.innerHTML="<b>"+label+"</b><div style=\"position:relative;min-height:28px;background:#151923\"></div>";root.appendChild(r)})}
 function splitCaptionAtPlayhead(){const now=typeof video!=="undefined"?Number(video.currentTime||0):0;const a=captionState();const x=a.find(x=>now>x.start&&now<x.end);if(!x)return;const old=x.end;x.end=now;a.push({text:x.text,start:now,end:old});a.sort((p,q)=>p.start-q.start);renderCaptions();msg("Caption split ✓")}
-function curveSpeed(cs,current,start,end){
- const c=cs||{};
- const preset=typeof c.speedCurvePreset==="string"?c.speedCurvePreset:(typeof c.speedCurve==="string"?c.speedCurve:"normal");
- const t=Math.max(0,Math.min(1,(Number(current)-Number(start||0))/Math.max(.001,Number(end||1)-Number(start||0))));
- const presets={normal:[1,1,1,1,1],montage:[1,1.5,.7,1.5,1],bullet:[1,2,2,2,1],jump:[.6,1.8,.8,2,.7],hero:[.5,.7,1,1.5,2],flash:[1,3,.5,3,1],smooth:[.8,1,1.2,1,.8]};
- let pts=Array.isArray(c.speedCurve)&&c.speedCurve.every(x=>typeof x==="number")?c.speedCurve:presets[preset]||presets.normal;
- if(pts.length<2)pts=presets.normal;
- const pos=t*(pts.length-1),i=Math.min(pts.length-2,Math.floor(pos)),f=pos-i;
- const a=Math.max(.1,Number(pts[i])||1),b=Math.max(.1,Number(pts[i+1])||1);
- return a+(b-a)*(f*f*(3-2*f));
-}
-function applySpeedCurvePreview(){
- if(typeof video==="undefined"||!video.src)return;
- const cs=(typeof clipSettings!=="undefined"&&clipSettings[currentIndex])||settings();
- const rate=curveSpeed(cs,video.currentTime||0,Number(cs.trimStart||0),Number(cs.trimEnd||video.duration||1));
- try{video.playbackRate=rate;video.preservesPitch=true}catch(e){}
- const v=document.getElementById("speedVal");if(v)v.textContent=rate.toFixed(2)+"×";
-}
-function bindSpeedCurvePreview(){
- if(typeof video==="undefined"||video.dataset.speedCurveBound)return;
- video.dataset.speedCurveBound="1";
- video.addEventListener("timeupdate",applySpeedCurvePreview);
- video.addEventListener("play",applySpeedCurvePreview);
-}
-function advancedEditorPack(){bindSpeedCurvePreview();
+function advancedEditorPack(){
  const c=typeof settings==="function"?settings():{};
  c.speedCurve=c.speedCurve||[{t:0,v:1},{t:.25,v:1},{t:.5,v:1},{t:.75,v:1},{t:1,v:1}];
  c.textAnimPresets=c.textAnimPresets||["fade","pop","zoom","slideUp","bounce","spin"];
@@ -127,7 +128,7 @@ function applyTemplatePreset(name){
 }
 function setSpeedCurvePreset(name){
  const c=typeof settings==="function"?settings():{};
- const p={normal:[1,1,1,1,1],montage:[1,1.5,.7,1.5,1],hero:[.5,.7,1,1.5,2],bullet:[1,2,2,2,1],jump:[.6,1.8,.8,2,.7],flash:[1,3,.5,3,1],smooth:[.8,1,1.2,1,.8]};
+ const p={normal:[1,1,1,1,1],montage:[1,1.5,.7,1.5,1],hero:[.5,.7,1,1.5,2],bullet:[1,2,2,2,1],smooth:[.8,1,1.2,1,0.8]};
  c.speedCurvePreset=name;c.speedCurve=p[name]||p.normal;msg("⏩ Speed Curve: "+name+" ✓");
 }
 function prepareCaptionLayer(){
@@ -158,15 +159,6 @@ let exportConfig={width:1280,height:720,fps:30,bitrate:6000000};
 function multiTrackClipInfo(){const rows=document.querySelectorAll("#overlayTracks .track-row");rows.forEach((r,i)=>{r.dataset.trackIndex=i;r.style.minHeight="36px";const body=r.querySelector("div");if(body){body.style.minHeight="30px";body.style.position="relative";body.style.overflowX="auto"}});msg("🎚️ Multi-track layout सक्रिय ✓")}
 function duplicateCurrentClipToTrack(){if(!files.length){msg("आधी media जोडा.",true);return}const i=currentIndex,f=files[i];files.push(f);const src=clipSettings[i]||{},copy=JSON.parse(JSON.stringify(src));clipSettings.push(copy);currentIndex=files.length-1;renderOverlayTracks();msg("➕ Clip duplicate करून नवीन track तयार ✓")}
 function moveCurrentClipEarlier(){if(currentIndex<=0){msg("हा clip आधीच पहिला आहे.",true);return}const i=currentIndex;[files[i-1],files[i]]=[files[i],files[i-1]];[clipSettings[i-1],clipSettings[i]]=[clipSettings[i],clipSettings[i-1]];currentIndex=i-1;renderOverlayTracks();msg("↔️ Track clip order बदलला ✓")}
-function bestRecorderOptions(profile){
- const p=profile||{},fps=Number(p.fps||30),q=p.quality||"high";
- const types=["video/mp4;codecs=avc1.42E01E,mp4a.40.2","video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];
- let preferred="";
- if(p.format==="mp4")preferred=types.find(x=>x.startsWith("video/mp4")&&MediaRecorder.isTypeSupported(x))||"";
- if(!preferred)preferred=types.find(x=>MediaRecorder.isTypeSupported(x))||"";
- const bitrate=q==="low"?3500000:q==="medium"?5000000:8000000;
- return {mimeType:preferred||undefined,videoBitsPerSecond:bitrate,frameRate:fps};
-}
 function getExportProfile(){const c=typeof settings==="function"?settings():{};return c.exportProfile||{format:"auto",fps:30,quality:"high"}}
 function createRecorder(stream){const p=getExportProfile(),o=bestRecorderOptions(p);try{return new MediaRecorder(stream,o)}catch(e){try{return new MediaRecorder(stream)}catch(x){throw x}}}
 function exportProfileStatus(){const p=getExportProfile(),o=bestRecorderOptions(p);msg("📤 "+(o.mimeType||"browser default")+" • "+(p.fps||30)+"fps • "+(p.quality||"high"))}
@@ -275,7 +267,7 @@ $("#projectFile").onchange=e=>{const f=e.target.files[0];if(!f)return;const rd=n
 function act(a){
  if(!restoringHistory) pushHistory();
  if(!video.src && !currentImage){tools.innerHTML="<b>आधी Photo / Video निवडा.</b>";return}
-  if(a==="keyframes"){tools.innerHTML="<b>Keyframe</b><button id=\"addKeyframe\">Add Keyframe</button><button id=\"clearKeyframes\">Clear Keyframes</button><div id=\"kfList\">Keyframes: "+keyframes.filter(k=>k.clip===currentIndex).length+"</div><div id=\"kfControls\"><label>Zoom <input id=\"kfZoom\" type=\"range\" min=\"0.5\" max=\"3\" step=\"0.01\" value=\"1\"></label><label>Rotation <input id=\"kfRotation\" type=\"range\" min=\"-180\" max=\"180\" step=\"1\" value=\"0\"></label><label>Opacity <input id=\"kfOpacity\" type=\"range\" min=\"0\" max=\"1\" step=\"0.01\" value=\"1\"></label><label>X <input id=\"kfX\" type=\"range\" min=\"-100\" max=\"100\" step=\"1\" value=\"0\"></label><label>Y <input id=\"kfY\" type=\"range\" min=\"-100\" max=\"100\" step=\"1\" value=\"0\"></label><button id=\"kfApply\">Apply to selected ◆</button></div><div class=\"hint\">Timeline मधील ◆ select करून values बदला.</div>";return;}
+  if(a==="keyframes"){tools.innerHTML="<b>Keyframe</b><button id=\"addKeyframe\">Add Keyframe</button><button id=\"clearKeyframes\">Clear Keyframes</button><div id=\"kfList\">Keyframes: "+keyframes.filter(k=>k.clip===currentIndex).length+"</div><div class=\"hint\">Timeline मधील ♦️ वर tap करून Zoom / Rotation / Opacity बदला.</div>";return;}
 if(a==="trim"){
    const d=currentImage?5:(video.duration||0);
    tools.innerHTML='<div class="tools"><b>✂️ Trim</b><label>Start <input id="ts" type="range" min="0" max="'+d+'" step=".1" value="'+trimStart+'"></label><span id="tsv">'+fmt(trimStart)+'</span><label>End <input id="te" type="range" min="0" max="'+d+'" step=".1" value="'+(trimEnd||d)+'"></label><span id="tev">'+fmt(trimEnd||d)+'</span><button id="applyTrim">Apply</button><div class="hint">Timeline sliders ओढून Trim करा.</div></div>';
@@ -298,7 +290,7 @@ if(a==="trim"){
  }
  if(a==="ratio")tools.innerHTML='<b>Ratio</b><button data-r="original">Original</button><button data-r="9:16">9:16 Reel</button><button data-r="1:1">1:1</button><button data-r="16:9">16:9</button>';
  if(a==="text")tools.innerHTML='<input id="txt" placeholder="Marathi / English Text लिहा"><label>Size <input id="fontSize" type="range" min="16" max="80" value="30"></label><label>Position <input id="textY" type="range" min="5" max="90" value="16"></label><button id="add">Add</button><button id="clearText">Clear</button>';
- if(a==="speed")tools.innerHTML='<b>⚡ Speed</b><button data-v=".5">0.5×</button><button data-v="1">1×</button><button data-v="1.5">1.5×</button><button data-v="2">2×</button><label>Custom <input id="speedCustom" type="range" min=".25" max="4" step=".05" value="'+settings().speed+'"></label><span id="speedVal">'+settings().speed+'×</span><hr><b>📈 Speed Curve</b><button data-curve="montage">Montage</button><button data-curve="bullet">Bullet</button><button data-curve="jump">Jump Cut</button><button data-curve="hero">Hero</button><button data-curve="flash">Flash</button><button data-curve="smooth">Smooth</button><button data-curve="none">Normal</button><button data-customcurve="1">⚙️ Custom</button><div class="hint">Videoच्या वेळेनुसार speed आपोआप बदलतो. Custom: 0.1×–4×.</div>';
+ if(a==="speed")tools.innerHTML='<b>⚡ Speed</b><button data-v=".5">0.5×</button><button data-v="1">1×</button><button data-v="1.5">1.5×</button><button data-v="2">2×</button><label>Custom <input id="speedCustom" type="range" min=".25" max="4" step=".05" value="'+settings().speed+'"></label><span id="speedVal">'+settings().speed+'×</span><hr><b>📈 Speed Curve</b><button data-curve="montage">Montage</button><button data-curve="bullet">Bullet</button><button data-curve="jump">Jump Cut</button><button data-curve="hero">Hero</button><button data-curve="flash">Flash</button><button data-curve="smooth">Smooth</button><button data-curve="none">Normal</button><div class="hint">Speed Curve: 0.1x–4x • Preview + Export दोन्हीमध्ये लागू.</div>';
  if(a==="transform")tools.innerHTML='<b>🎯 Transform</b><label>Zoom <input id="trZoom" type="range" min="1" max="3" step=".1" value="'+settings().zoom+'"></label><label>Rotation <input id="trRot" type="range" min="-180" max="180" value="'+settings().rotation+'"></label><label>Opacity <input id="trOpacity" type="range" min="0" max="1" step=".05" value="'+settings().opacity+'"></label><button id="mirrorBtn">🪞 Mirror</button>'; if(a==="adjust")tools.innerHTML='<b>🎨 Adjust</b><label>Brightness <input id="adjB" type="range" min=".3" max="2" step=".05" value="'+settings().brightness+'"></label><label>Contrast <input id="adjC" type="range" min=".3" max="2" step=".05" value="'+settings().contrast+'"></label><label>Saturation <input id="adjS" type="range" min="0" max="2" step=".05" value="'+settings().saturation+'"></label><label>Blur <input id="adjBlur" type="range" min="0" max="12" step=".5" value="'+settings().blur+'"></label>'; if(a==="zoom")tools.innerHTML='<b>🔍 Zoom</b><input id="zoom" type="range" min="1" max="2.5" step=".1" value="'+settings().zoom+'"><div class="hint">Preview मध्ये Zoom करा.</div>';
  if(a==="filter")tools.innerHTML='<button data-f="none">Original</button><button data-f="grayscale(1)">B&W</button><button data-f="sepia(1)">Sepia</button><button data-f="contrast(1.4) saturate(1.3)">Vivid</button>';
  if(a==="clipSettings")tools.innerHTML='<b>🎬 Clip Settings</b><label>Photo/Clip Duration <input id="clipDur" type="range" min="1" max="15" step=".5" value="'+settings().duration+'"></label><span id="clipDurVal">'+settings().duration+' sec</span><label>Transition <select id="clipTrans"><option value="none">None</option><option value="fade">Fade</option><option value="flash">Flash</option></select></label>';
@@ -377,10 +369,10 @@ async function exportVideo(){
    if(musicFile){musicEl=new Audio(URL.createObjectURL(musicFile));musicEl.loop=true;const ms=audioCtx.createMediaElementSource(musicEl);const mg=audioCtx.createGain();const baseVol=+($("#musicVol")?.value||.7);mg.gain.value=baseVol;ms.connect(mg).connect(dest);musicEl.onloadedmetadata=()=>{const d=musicEl.duration;const fi=Math.min(musicFadeIn,d/2);const fo=Math.min(musicFadeOut,d/2);mg.gain.cancelScheduledValues(audioCtx.currentTime);mg.gain.setValueAtTime(fi?0:baseVol,audioCtx.currentTime);if(fi)mg.gain.linearRampToValueAtTime(baseVol,audioCtx.currentTime+fi);if(fo&&isFinite(d)){mg.gain.setValueAtTime(baseVol,audioCtx.currentTime+Math.max(0,d-fo));mg.gain.linearRampToValueAtTime(0,audioCtx.currentTime+d)}}}
    dest.stream.getAudioTracks().forEach(t=>stream.addTrack(t));
  }catch(e){console.warn(e)}
- const recorderMime=(exportConfig.preferredMime&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(exportConfig.preferredMime))?exportConfig.preferredMime:mime; const rec=new MediaRecorder(stream,{mimeType:recorderMime,videoBitsPerSecond:exportConfig.bitrate}),chunks=[];
+ const rec=new MediaRecorder(stream,{mimeType,videoBitsPerSecond:exportConfig.bitrate}),chunks=[];
  rec.ondataavailable=e=>{if(e.data.size)chunks.push(e.data)};
  rec.onstop=()=>{
-   const finalMime=recorderMime||mime;const blob=new Blob(chunks,{type:finalMime}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="AK-Video-"+Date.now()+"."+extFor(finalMime);a.click();
+   const blob=new Blob(chunks,{type:mime}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="AK-Video-"+Date.now()+"."+extFor(mime);a.click();
    if(audioCtx)audioCtx.close();if(musicEl){musicEl.pause();try{if(musicEl.src)URL.revokeObjectURL(musicEl.src)}catch(e){}}cleanupPIPExport(pipExportLayers);
    if(oldSrc){video.src=oldSrc;video.currentTime=oldTime} video.style.display=oldDisplay;msg("Multi-Clip Export पूर्ण झाले ✅");
  };
@@ -397,7 +389,7 @@ async function exportVideo(){
    if(f.type.startsWith("image/")){
      const img=new Image();img.src=url;await new Promise((resolve,reject)=>{img.onload=resolve;img.onerror=reject});
      const until=performance.now()+(cs.duration||photoDuration)*1000;
-     await new Promise(resolve=>{const drawPhoto=()=>{ctx.fillStyle="#000";ctx.fillRect(0,0,canvas.width,canvas.height);const src=img.width/img.height,dst=canvas.width/canvas.height;let dw=canvas.width,dh=canvas.height,dx=0,dy=0;if(src>dst){dh=canvas.height;dw=dh*src;dx=(canvas.width-dw)/2}else{dw=canvas.width;dh=dw/src;dy=(canvas.height-dh)/2}ctx.save();const pk=keyframeExportState(i,Math.max(0,(performance.now()-(until-(cs.duration||photoDuration)*1000))/1000));ctx.globalAlpha=Math.max(0,Math.min(1,Number(pk?.opacity??cs.opacity??1)));ctx.translate(canvas.width/2+(Number(pk?.x||cs.x||0)*canvas.width/100),canvas.height/2+(Number(pk?.y||cs.y||0)*canvas.height/100));ctx.rotate(Number(pk?.rotation||cs.rotation||0)*Math.PI/180);ctx.scale(Number(pk?.zoom||cs.zoom||1),Number(pk?.zoom||cs.zoom||1));const pm=cs.blendMode==="normal"||!cs.blendMode?"source-over":cs.blendMode;ctx.globalCompositeOperation=pm;ctx.drawImage(img,dx-canvas.width/2,dy-canvas.height/2,dw,dh);ctx.globalCompositeOperation="source-over";ctx.restore();if(overlay.textContent){ctx.font=Math.max(textSize,canvas.width*.055)+"px system-ui";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.strokeStyle="#000";ctx.lineWidth=7;ctx.strokeText(overlay.textContent,canvas.width/2,canvas.height*textY/100);ctx.fillText(overlay.textContent,canvas.width/2,canvas.height*textY/100)}drawPIPLayersExport(ctx,canvas,pipExportLayers,pipProjectTime);if(performance.now()>=until){resolve();return}requestAnimationFrame(drawPhoto)};requestAnimationFrame(drawPhoto)});pipProjectTime+=Math.max(.25,Number(cs.duration||photoDuration||3));URL.revokeObjectURL(url);first=false;continue;
+     await new Promise(resolve=>{const drawPhoto=()=>{ctx.fillStyle="#000";ctx.fillRect(0,0,canvas.width,canvas.height);const src=img.width/img.height,dst=canvas.width/canvas.height;let dw=canvas.width,dh=canvas.height,dx=0,dy=0;if(src>dst){dh=canvas.height;dw=dh*src;dx=(canvas.width-dw)/2}else{dw=canvas.width;dh=dw/src;dy=(canvas.height-dh)/2}ctx.drawImage(img,dx,dy,dw,dh);if(overlay.textContent){ctx.font=Math.max(textSize,canvas.width*.055)+"px system-ui";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.strokeStyle="#000";ctx.lineWidth=7;ctx.strokeText(overlay.textContent,canvas.width/2,canvas.height*textY/100);ctx.fillText(overlay.textContent,canvas.width/2,canvas.height*textY/100)}drawPIPLayersExport(ctx,canvas,pipExportLayers,pipProjectTime);if(performance.now()>=until){resolve();return}requestAnimationFrame(drawPhoto)};requestAnimationFrame(drawPhoto)});pipProjectTime+=Math.max(.25,Number(cs.duration||photoDuration||3));URL.revokeObjectURL(url);first=false;continue;
    }
    startTime=Math.max(0,cs.trimStart??0);endTime=Math.min(video.duration,cs.trimEnd??video.duration)
    video.currentTime=startTime;await new Promise(r=>video.addEventListener("seeked",r,{once:true}));
@@ -420,7 +412,7 @@ async function exportVideo(){
        const vw=video.videoWidth||canvas.width,vh=video.videoHeight||canvas.height,src=vw/vh,dst=canvas.width/canvas.height;
        let dw=canvas.width,dh=canvas.height,dx=0,dy=0;
        if(src>dst){dh=canvas.height;dw=dh*src;dx=(canvas.width-dw)/2}else{dw=canvas.width;dh=dw/src;dy=(canvas.height-dh)/2}
-       const exportRate=curveSpeed(cs,video.currentTime,startTime,endTime);try{video.playbackRate=exportRate;video.preservesPitch=true}catch(e){} ctx.filter=video.style.filter||"none";const kf=keyframeExportState(i,video.currentTime);const kc=kf||{zoom:zoom||1,rotation:Number(cs.rotation||0),opacity:Number(cs.opacity??1),x:Number(cs.x||0),y:Number(cs.y||0)};ctx.save();ctx.globalAlpha=Math.max(0,Math.min(1,Number(kc.opacity??1)));ctx.translate(canvas.width/2+(Number(kc.x||0)*canvas.width/100),canvas.height/2+(Number(kc.y||0)*canvas.height/100));ctx.rotate(Number(kc.rotation||0)*Math.PI/180);ctx.scale(Number(kc.zoom||1),Number(kc.zoom||1));const mask=cs.mask||"none";if(mask==="circle"||mask==="oval"||mask==="rounded"||mask==="diamond"){ctx.beginPath();if(mask==="circle")ctx.arc(0,0,Math.min(canvas.width,canvas.height)*.47,0,Math.PI*2);else if(mask==="oval"){ctx.ellipse(0,0,canvas.width*.46,canvas.height*.42,0,0,Math.PI*2)}else if(mask==="diamond"){ctx.moveTo(0,-canvas.height/2);ctx.lineTo(canvas.width/2,0);ctx.lineTo(0,canvas.height/2);ctx.lineTo(-canvas.width/2,0);ctx.closePath()}else{const r=Math.min(canvas.width,canvas.height)*.07,w=canvas.width,h=canvas.height;if(typeof ctx.roundRect==="function")ctx.roundRect(-w/2,-h/2,w,h,r);else{ctx.moveTo(-w/2+r,-h/2);ctx.lineTo(w/2-r,-h/2);ctx.quadraticCurveTo(w/2,-h/2,w/2,-h/2+r);ctx.lineTo(w/2,h/2-r);ctx.quadraticCurveTo(w/2,h/2,w/2-r,h/2);ctx.lineTo(-w/2+r,h/2);ctx.quadraticCurveTo(-w/2,h/2,-w/2,h/2-r);ctx.lineTo(-w/2,-h/2+r);ctx.quadraticCurveTo(-w/2,-h/2,-w/2+r,-h/2)} }ctx.clip()}const bm=cs.blendMode==="normal"||!cs.blendMode?"source-over":cs.blendMode;ctx.globalCompositeOperation=bm;ctx.drawImage(video,dx-canvas.width/2,dy-canvas.height/2,dw,dh);ctx.globalCompositeOperation="source-over";ctx.restore();ctx.filter="none";
+       ctx.filter=video.style.filter||"none";ctx.save();ctx.translate(canvas.width/2,canvas.height/2);ctx.scale(zoom,zoom);ctx.drawImage(video,dx-canvas.width/2,dy-canvas.height/2,dw,dh);ctx.restore();ctx.filter="none";
        if(overlay.textContent){ctx.font=Math.max(textSize,canvas.width*.055)+"px system-ui";ctx.textAlign="center";ctx.fillStyle="#fff";ctx.strokeStyle="#000";ctx.lineWidth=7;ctx.strokeText(overlay.textContent,canvas.width/2,canvas.height*.16);ctx.fillText(overlay.textContent,canvas.width/2,canvas.height*.16)}
        drawPIPLayersExport(ctx,canvas,pipExportLayers,pipProjectTime+(video.currentTime-startTime));
        if(video.currentTime>=endTime||video.ended){video.pause();resolve();return}
@@ -574,250 +566,3 @@ async function aiVideoBackgroundPreview(){if(!files.length){msg("आधी video
 async function aiBackgroundRemove(){if(!files.length){msg("आधी photo/video जोडा.",true);return}if(!window.bodySegmentation){msg("AI segmentation library लोड झाली नाही.",true);return}try{msg("🤖 AI Background Removal model तयार होत आहे…");const model=bodySegmentation.SupportedModels.MediaPipeSelfieSegmentation;const seg=await bodySegmentation.createSegmenter(model,{runtime:"mediapipe",solutionPath:"https://cdn.jsdelivr.net/npm/@mediapipe/selfie_segmentation",modelType:"general"});const f=files[currentIndex]||files[0];if(f.type.startsWith("image/")){const img=new Image();img.src=URL.createObjectURL(f);await new Promise((res,rej)=>{img.onload=res;img.onerror=rej});const c=document.createElement("canvas");c.width=img.naturalWidth;c.height=img.naturalHeight;const x=c.getContext("2d");x.drawImage(img,0,0);const people=await seg.segmentPeople(c);const mask=await bodySegmentation.toBinaryMask(people);const out=document.createElement("canvas");out.width=c.width;out.height=c.height;const o=out.getContext("2d");o.drawImage(c,0,0);const id=o.getImageData(0,0,out.width,out.height),md=mask.data||mask;for(let i=0,p=0;i<id.data.length;i+=4,p+=4){if(md[p]===0)id.data[i+3]=0}o.putImageData(id,0,0);const blob=await new Promise(r=>out.toBlob(r,"image/png"));const nf=new File([blob],"AI-removed-"+f.name.replace(/\.[^.]+$/,"")+".png",{type:"image/png"});files[currentIndex]=nf;loadFile(nf,currentIndex);msg("🤖 AI Background Removed ✓")}else{msg("AI segmentation तयार आहे; video preview साठी frame-by-frame processing पुढच्या export pipeline मध्ये जोडता येईल.",true)}try{seg.dispose()}catch(e){}}catch(e){console.error(e);msg("AI Background Removal failed — Chroma Key वापरा.",true)}}
 function chromaBackgroundRemove(){if(!files.length){msg("आधी media जोडा.",true);return}const c=typeof settings==="function"?settings():{};c.backgroundRemove="chroma";c.chromaEnabled=true;msg("🪄 Background Remove: Chroma Key mode ✓ — green/blue background निवडा")}
 function openMultiTrackEditor(){tools.innerHTML='<b>🎚️ Multi-track</b><button id="mtRefresh">↻ Refresh Tracks</button><button id="mtDuplicate">＋ Duplicate Clip</button><button id="mtEarlier">← Move Earlier</button><small>Video, Text, Sticker, Audio, Caption आणि Effect tracks वेगळे दिसतात.</small>';document.getElementById("mtRefresh").onclick=()=>{multiTrackClipInfo();renderOverlayTracks()};document.getElementById("mtDuplicate").onclick=duplicateCurrentClipToTrack;document.getElementById("mtEarlier").onclick=moveCurrentClipEarlier;multiTrackClipInfo()}
-\n
-/* AK HISTORY STABILITY — undo/redo state helpers */
-var historyStack=typeof historyStack!=="undefined"?historyStack:[];
-var redoStack=typeof redoStack!=="undefined"?redoStack:[];
-var restoringHistory=typeof restoringHistory!=="undefined"?restoringHistory:false;
-function captureState(){
-  const clone=v=>{try{return JSON.parse(JSON.stringify(v))}catch(e){return v}};
-  return {clipSettings:clone(typeof clipSettings!=="undefined"?clipSettings:[]),keyframes:clone(typeof keyframes!=="undefined"?keyframes:[]),splitPoints:clone(typeof splitPoints!=="undefined"?splitPoints:[]),currentIndex:typeof currentIndex!=="undefined"?currentIndex:0,ratio:typeof ratio!=="undefined"?ratio:"16:9",photoDuration:typeof photoDuration!=="undefined"?photoDuration:5};
-}
-function restoreState(st){
-  if(!st)return;
-  if(typeof clipSettings!=="undefined"&&st.clipSettings)clipSettings=JSON.parse(JSON.stringify(st.clipSettings));
-  if(typeof keyframes!=="undefined"&&st.keyframes)keyframes=JSON.parse(JSON.stringify(st.keyframes));
-  if(typeof splitPoints!=="undefined"&&st.splitPoints)splitPoints=JSON.parse(JSON.stringify(st.splitPoints));
-  if(typeof currentIndex!=="undefined"&&Number.isFinite(Number(st.currentIndex)))currentIndex=Number(st.currentIndex);
-  if(typeof ratio!=="undefined"&&st.ratio)ratio=st.ratio;
-  if(typeof photoDuration!=="undefined"&&st.photoDuration)photoDuration=Number(st.photoDuration);
-}
-function pushHistory(){
-  if(restoringHistory)return;
-  historyStack.push(captureState());
-  if(historyStack.length>30)historyStack.shift();
-  redoStack.length=0;
-}
-
-/* AK EDITOR COMPLETION PACK v1 — core stability + remaining editor features */
-(function(){
-  const AKH="ak-video-editor-autosave-v1";
-  window.renderTimeline=window.renderTimeline||function(){
-    const el=document.getElementById("track");if(!el)return;
-    const list=Array.isArray(files)?files:[];
-    if(!list.length){el.textContent="Media जोडल्यावर Timeline येथे दिसेल";return;}
-    el.innerHTML="";
-    list.forEach((f,i)=>{
-      const c=(typeof clipSettings!=="undefined"&&clipSettings[i])||{};
-      const b=document.createElement("div");b.className="clip-block";b.dataset.clip=i;
-      b.textContent=(i===currentIndex?"▶ ":"")+((f&&f.name)||("Clip "+(i+1)));
-      b.title="Clip "+(i+1)+" • "+(Number(c.trimStart||0).toFixed(1))+"s–"+(c.trimEnd!=null?Number(c.trimEnd).toFixed(1):"end")+" • Tap=select";
-      b.onclick=(ev)=>{ev.stopPropagation();currentIndex=i;try{load(f)}catch(e){try{loadFile(f,i)}catch(x){}}renderTimeline()};
-      el.appendChild(b);
-    });
-    if(Array.isArray(splitPoints)&&splitPoints.length){const m=document.createElement("small");m.textContent="✂ Split: "+splitPoints.map(x=>fmt(x)).join(" • ");el.appendChild(m)}
-    const play=document.createElement("div");play.className="ak-timeline-playhead";el.appendChild(play);
-    const scrub=ev=>{
-      if(!files.length||!video||!video.duration||!Number.isFinite(video.duration))return;
-      const r=el.getBoundingClientRect(),x=Math.max(0,Math.min(r.width,ev.clientX-r.left));
-      video.currentTime=(x/r.width)*video.duration;play.style.left=Math.round((x/r.width)*100)+"%";
-    };
-    el.onpointerdown=ev=>{if(ev.target.classList.contains("clip-block"))return;scrub(ev);el.setPointerCapture?.(ev.pointerId)};
-    el.onpointermove=ev=>{if(el.hasPointerCapture?.(ev.pointerId))scrub(ev)};
-    el.onpointerup=ev=>{try{el.releasePointerCapture?.(ev.pointerId)}catch(e){}};
-  };
-window.renderKeyframeTracks=window.renderKeyframeTracks||function(){
-    const el=document.getElementById("track");if(!el||!Array.isArray(keyframes))return;
-    const list=keyframes.filter(k=>k.clip===currentIndex).sort((x,y)=>x.time-y.time);
-    el.querySelectorAll(".ak-kf-marker").forEach(x=>x.remove());
-    const dur=currentImage?Number((clipSettings[currentIndex]||{}).duration||photoDuration||5):Number(video.duration||((clipSettings[currentIndex]||{}).trimEnd||1));
-    list.forEach((k,idx)=>{
-      const m=document.createElement("button");m.type="button";m.className="ak-kf-marker";m.textContent="◆";m.title="Keyframe "+(idx+1)+" • "+fmt(k.time);
-      m.style.left=Math.max(0,Math.min(100,(k.time/Math.max(.001,dur))*100))+"%";
-      m.dataset.kfIndex=String(keyframes.indexOf(k));
-      m.onpointerdown=ev=>{
-        ev.stopPropagation();selectedKeyframe=k;
-        const move=e=>{
-          const r=el.getBoundingClientRect(),p=Math.max(0,Math.min(1,(e.clientX-r.left)/Math.max(1,r.width)));
-          k.time=p*dur;keyframes.sort((x,y)=>x.clip-y.clip||x.time-y.time);renderKeyframeTracks();
-        };
-        const up=()=>{document.removeEventListener("pointermove",move);document.removeEventListener("pointerup",up);pushHistory();msg("Keyframe time बदलला ✓")};
-        document.addEventListener("pointermove",move);document.addEventListener("pointerup",up);
-      };
-      m.onclick=ev=>{ev.stopPropagation();selectedKeyframe=k;video.currentTime=Math.max(0,Math.min(dur,k.time));["Zoom","Rotation","Opacity","X","Y"].forEach(n=>{const q=document.getElementById("kf"+n);if(q)q.value=k[n.toLowerCase()]??(n==="Zoom"?1:n==="Opacity"?1:0)});msg("Keyframe "+(idx+1)+" select ✓")};
-      el.appendChild(m);
-    });
-    el.dataset.keyframes=String(list.length);
-  };
-window.renderTransitionTracks=window.renderTransitionTracks||function(){
-    const el=document.getElementById("track");if(!el)return;
-    el.dataset.transition=String((typeof settings==="function"?settings():{}).transition||"none");
-  };
-  function akSettings(){
-    if(typeof clipSettings==="undefined") return {};
-    if(!clipSettings[currentIndex]) clipSettings[currentIndex]={};
-    return clipSettings[currentIndex];
-  }
-  window.settings=window.settings||akSettings;
-  window.applyVisualSettings=window.applyVisualSettings||function(){
-    const c=akSettings(),v=document.getElementById("video"); if(!v)return;
-    const b=Number(c.brightness??1),co=Number(c.contrast??1),s=Number(c.saturation??1),h=Number(c.hue??0),l=Number(c.lightness??1),bl=Number(c.blur??0);
-    let f=(c.filter&&c.filter!=="none"?c.filter+" ":"")+"brightness("+b+") contrast("+co+") saturate("+s+") hue-rotate("+h+"deg) brightness("+l+")";
-    if(bl>0) f+=" blur("+bl+"px)";
-    v.style.filter=f;
-    v.style.transform="translate("+(Number(c.x||0))+"px,"+(Number(c.y||0))+"px) scale("+Number(c.zoom||1)+") rotate("+Number(c.rotation||0)+"deg)"+(c.mirror?" scaleX(-1)":"");
-    v.style.opacity=Number(c.opacity??1);
-    v.style.mixBlendMode=c.blendMode||"normal";
-  };
-  window.applyMaskPreview=window.applyMaskPreview||function(){
-    const c=akSettings(),v=document.getElementById("video"); if(!v)return;
-    const m=c.mask||"none";
-    v.style.clipPath=m==="circle"?"circle(46% at 50% 50%)":m==="rect"?"inset(3% 3% 3% 3% round 4%)":"none";
-  };
-  window.saveProject=window.saveProject||async function(){
-    const payload={version:2,createdAt:new Date().toISOString(),ratio,photoDuration,files:[],music:null,clipSettings,keyframes,splitPoints,exportConfig};
-    for(const f of (files||[])){payload.files.push({name:f.name,type:f.type,size:f.size,lastModified:f.lastModified,data:await new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(f)})});}
-    if(typeof musicFile!=="undefined"&&musicFile)payload.music={name:musicFile.name,type:musicFile.type,size:musicFile.size,lastModified:musicFile.lastModified,data:await new Promise(res=>{const r=new FileReader();r.onload=()=>res(r.result);r.readAsDataURL(musicFile)})};
-    const blob=new Blob([JSON.stringify(payload)],{type:"application/json"}),a=document.createElement("a");a.href=URL.createObjectURL(blob);a.download="AK-Video-Project.json";a.click();setTimeout(()=>URL.revokeObjectURL(a.href),1000);
-    try{localStorage.setItem(AKH,JSON.stringify({...payload,files:[],music:null}))}catch(e){}
-    msg("💾 Project Save झाला ✓");
-  };
-  window.undo=window.undo||function(){if(typeof historyStack==="undefined"||!historyStack.length){msg("Undo साठी बदल उपलब्ध नाही.",true);return}try{redoStack.push(captureState());const st=historyStack.pop();restoringHistory=true;restoreState(st);restoringHistory=false;renderTimeline();renderOverlayTracks();applyVisualSettings();applyMaskPreview();msg("↶ Undo ✓")}catch(e){restoringHistory=false;msg("Undo लागू झाले नाही.",true)}};
-  window.redo=window.redo||function(){if(typeof redoStack==="undefined"||!redoStack.length){msg("Redo साठी बदल उपलब्ध नाही.",true);return}try{historyStack.push(captureState());const st=redoStack.pop();restoringHistory=true;restoreState(st);restoringHistory=false;renderTimeline();renderOverlayTracks();applyVisualSettings();applyMaskPreview();msg("↷ Redo ✓")}catch(e){restoringHistory=false;msg("Redo लागू झाले नाही.",true)}};
-  function applyTextAnimation(){
-    const o=document.getElementById("overlay"),c=akSettings();if(!o)return;
-    o.classList.remove("ak-ta-pop","ak-ta-fade","ak-ta-slide","ak-ta-zoom","ak-ta-bounce");
-    const n=String(c.textAnimation||"none");if(n!=="none")o.classList.add("ak-ta-"+n);
-  }
-  function refreshCompletionUI(){
-    const t=document.getElementById("tools");if(!t)return;
-    const b=document.createElement("div");b.className="ak-completion-panel";
-    b.innerHTML='<b>🚀 Advanced</b><button data-ak-action="save-local">💾 Auto Save</button><button data-ak-action="clear-local">🗑️ Clear Auto Save</button><button data-ak-action="text-presets">🅰️ Text Animation</button><button data-ak-action="mask-presets">🎭 Mask</button><button data-ak-action="speed-curves">⏩ Speed Curve</button>';
-    t.appendChild(b);
-  }
-  document.addEventListener("click",e=>{
-    const a=e.target.closest("[data-ak-action]")?.dataset.akAction;if(!a)return;
-    if(a==="save-local"){try{localStorage.setItem(AKH,JSON.stringify({version:2,ratio,photoDuration,clipSettings,keyframes,splitPoints,exportConfig,savedAt:new Date().toISOString()}));msg("💾 Auto Save ✓")}catch(x){msg("Auto Save failed.",true)}}
-    if(a==="clear-local"){localStorage.removeItem(AKH);msg("Auto Save clear ✓")}
-    if(a==="text-presets"){const n=prompt("Text animation: none / pop / fade / slide / zoom / bounce",akSettings().textAnimation||"pop");if(n&&["none","pop","fade","slide","zoom","bounce"].includes(n)){akSettings().textAnimation=n;applyTextAnimation();msg("🅰️ Text Animation: "+n+" ✓")}}
-    if(a==="mask-presets"){const n=prompt("Mask: none / circle / rect",akSettings().mask||"none");if(n&&["none","circle","rect"].includes(n)){akSettings().mask=n;applyMaskPreview();msg("🎭 Mask: "+n+" ✓")}}
-    if(a==="speed-curves"){const n=prompt("Speed Curve: normal / montage / hero / bullet / jump / flash / smooth",akSettings().speedCurvePreset||"smooth");if(n){setSpeedCurvePreset(n);applySpeedCurvePreview()}}
-  });
-  if(typeof video!=="undefined"){
-    video.addEventListener("timeupdate",()=>{try{applySpeedCurvePreview();applyTextAnimation()}catch(e){}});
-    video.addEventListener("loadedmetadata",()=>{try{applyVisualSettings();applyMaskPreview()}catch(e){}});
-  }
-  window.addEventListener("load",()=>setTimeout(refreshCompletionUI,300));
-})();
-
-
-/* AK EDITOR COMPLETION PACK v2 — Smart Auto Cut, Templates, Pro Mask/Blend, Export readiness, Mobile polish */
-(function(){
-  const $id=id=>document.getElementById(id);
-  const cfg=()=>typeof settings==="function"?settings():(typeof clipSettings!=="undefined"?(clipSettings[currentIndex]||(clipSettings[currentIndex]={})):({}));
-  function setStatus(t,err=false){if(typeof msg==="function")msg(t,err);}
-
-  const templates={
-    cinematic:{name:"Cinematic",ratio:"16:9",filter:"contrast(1.08) saturate(.86)",transition:"fade",speed:1,textAnimation:"fade",zoom:1.03,brightness:1,contrast:1.08,saturation:.9},
-    reel:{name:"Reel",ratio:"9:16",filter:"contrast(1.05) saturate(1.12)",transition:"zoom",speed:1.08,textAnimation:"pop",zoom:1.04,brightness:1.02,contrast:1.05,saturation:1.12},
-    beat:{name:"Beat Sync",ratio:"9:16",filter:"contrast(1.1) saturate(1.2)",transition:"flash",speed:1,textAnimation:"bounce",zoom:1.06,brightness:1,contrast:1.1,saturation:1.2},
-    story:{name:"Story",ratio:"9:16",filter:"brightness(1.04) saturate(1.05)",transition:"slide",speed:1,textAnimation:"slide",zoom:1.02,brightness:1.04,contrast:1,saturation:1.05},
-    youtube:{name:"YouTube",ratio:"16:9",filter:"contrast(1.04) saturate(1.03)",transition:"crossfade",speed:1,textAnimation:"fade",zoom:1,brightness:1,contrast:1.04,saturation:1.03}
-  };
-  function applyTemplate(key){
-    const p=templates[key]; if(!p)return;
-    const c=cfg(); Object.assign(c,{filter:p.filter,transition:p.transition,speed:p.speed,textAnimation:p.textAnimation,zoom:p.zoom,brightness:p.brightness,contrast:p.contrast,saturation:p.saturation,template:key});
-    if(p.ratio){ratio=p.ratio;const pr=$id("preview");if(pr){pr.classList.toggle("video-916",ratio==="9:16");pr.classList.toggle("ratio-square",ratio==="1:1");pr.classList.toggle("ratio-wide",ratio==="16:9");}}
-    try{applyVisualSettings();applyMaskPreview();applyTextAnimation&&applyTextAnimation();renderTransitionTracks&&renderTransitionTracks()}catch(e){}
-    setStatus("🎬 "+p.name+" Template लागू ✓");
-  }
-  window.akApplyTemplate=applyTemplate;
-
-  async function smartAutoCut(){
-    if(!files||!files.length){setStatus("आधी video जोडा.",true);return}
-    const f=files[currentIndex];
-    if(!f||!f.type.startsWith("video/")){setStatus("Video clip निवडा.",true);return}
-    if(!window.AudioContext&&!window.webkitAudioContext){setStatus("या browser मध्ये audio analysis उपलब्ध नाही.",true);return}
-    setStatus("🤖 Smart Auto Cut: audio analysis सुरू…");
-    try{
-      const AC=window.AudioContext||window.webkitAudioContext, ac=new AC();
-      const ab=await f.arrayBuffer(), buf=await ac.decodeAudioData(ab.slice(0));
-      const ch=buf.numberOfChannels, sr=buf.sampleRate, win=Math.max(256,Math.floor(sr*.12));
-      const rms=[];
-      for(let s=0;s<buf.length;s+=win){
-        let sum=0,n=0;
-        for(let c=0;c<ch;c++){const d=buf.getChannelData(c);const end=Math.min(buf.length,s+win);for(let i=s;i<end;i+=2){const v=d[i];sum+=v*v;n++}}
-        rms.push(Math.sqrt(sum/Math.max(1,n)));
-      }
-      const sorted=rms.slice().sort((a,b)=>a-b), floor=sorted[Math.floor(sorted.length*.28)]||0.01;
-      const threshold=Math.max(.012,floor*1.35), minGap=1.15, points=[];
-      let silence=0, startSilence=0;
-      for(let i=0;i<rms.length;i++){
-        if(rms[i]<threshold){if(!silence)startSilence=i;silence+=.12}
-        else{
-          if(silence>=.48){
-            const p=startSilence*.12+silence*.5;
-            if(p>0.35&&p<buf.duration-0.35&&(!points.length||p-points[points.length-1]>=minGap))points.push(Number(p.toFixed(2)));
-          }
-          silence=0;
-        }
-      }
-      const cuts=points.slice(0,40);
-      if(typeof splitPoints!=="undefined"){splitPoints.splice(0,splitPoints.length,...cuts);renderTimeline&&renderTimeline();renderTransitionTracks&&renderTransitionTracks()}
-      if(typeof cfg==="function"){cfg().autoCut={mode:"silence",threshold,points:cuts,createdAt:new Date().toISOString()}}
-      try{await ac.close()}catch(e){}
-      setStatus("✂️ Smart Auto Cut पूर्ण ✓ — "+cuts.length+" cut points");
-    }catch(e){console.error(e);setStatus("Auto Cut analysis failed. Video मध्ये usable audio track आहे का तपासा.",true)}
-  }
-  window.akSmartAutoCut=smartAutoCut;
-
-  function setMask(name){
-    const c=cfg(); c.mask=name;
-    const v=$id("video"); if(!v)return;
-    const maps={none:"none",circle:"circle(47% at 50% 50%)",rect:"inset(3% 3% 3% 3% round 4%)",rounded:"inset(2% 2% 2% 2% round 7%)",diamond:"polygon(50% 0%,100% 50%,50% 100%,0% 50%)",oval:"ellipse(46% 42% at 50% 50%)"};
-    v.style.clipPath=maps[name]||"none";
-    setStatus("🎭 Mask: "+name+" ✓");
-  }
-  function setBlend(name){
-    const c=cfg(); c.blendMode=name;
-    const v=$id("video"); if(v)v.style.mixBlendMode=name;
-    setStatus("🌓 Blend: "+name+" ✓");
-  }
-
-  function exportReadiness(){
-    const types=["video/mp4;codecs=avc1.42E01E,mp4a.40.2","video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus"];
-    const supported=types.filter(x=>window.MediaRecorder&&MediaRecorder.isTypeSupported&&MediaRecorder.isTypeSupported(x));
-    const mp4=supported.some(x=>x.startsWith("video/mp4"));
-    if(typeof exportConfig!=="undefined")exportConfig.preferredMime=mp4?"video/mp4":(supported[0]||"video/webm");
-    setStatus(mp4?"🎞️ MP4 recording capability उपलब्ध ✓":"🎞️ MP4 native recording नाही — WebM fallback वापरला जाईल.");
-    return {mp4,supported};
-  }
-
-  function advancedPanel(){
-    const t=$id("tools"); if(!t)return;
-    const old=t.querySelector(".ak-v2-panel"); if(old)old.remove();
-    const p=document.createElement("div"); p.className="ak-v2-panel";
-    p.innerHTML='<div class="ak-v2-title">🚀 PRO COMPLETION</div>'+
-      '<div class="ak-v2-row"><b>Templates</b><button data-ak2-template="cinematic">🎞️ Cinematic</button><button data-ak2-template="reel">📱 Reel</button><button data-ak2-template="beat">🥁 Beat</button><button data-ak2-template="story">📖 Story</button><button data-ak2-template="youtube">▶️ YouTube</button></div>'+
-      '<div class="ak-v2-row"><b>Smart Cut</b><button id="akSmartCut">🤖 Auto Cut</button><button id="akExportCheck">🎞️ Export Check</button></div>'+
-      '<div class="ak-v2-row"><b>Mask</b><button data-ak2-mask="none">None</button><button data-ak2-mask="circle">Circle</button><button data-ak2-mask="oval">Oval</button><button data-ak2-mask="rounded">Rounded</button><button data-ak2-mask="diamond">Diamond</button></div>'+
-      '<div class="ak-v2-row"><b>Blend</b><button data-ak2-blend="normal">Normal</button><button data-ak2-blend="screen">Screen</button><button data-ak2-blend="multiply">Multiply</button><button data-ak2-blend="overlay">Overlay</button><button data-ak2-blend="soft-light">Soft Light</button></div>';
-    t.appendChild(p);
-    p.querySelectorAll("[data-ak2-template]").forEach(b=>b.onclick=()=>applyTemplate(b.dataset.ak2Template));
-    p.querySelectorAll("[data-ak2-mask]").forEach(b=>b.onclick=()=>setMask(b.dataset.ak2Mask));
-    p.querySelectorAll("[data-ak2-blend]").forEach(b=>b.onclick=()=>setBlend(b.dataset.ak2Blend));
-    $id("akSmartCut").onclick=smartAutoCut; $id("akExportCheck").onclick=()=>{exportReadiness();return window.akExportSelfTest&&window.akExportSelfTest()};
-  }
-
-  window.addEventListener("load",()=>setTimeout(advancedPanel,450));
-  document.addEventListener("click",e=>{
-    const b=e.target.closest("[data-ak2-template]"); if(b&&$id("tools")&&!$id("tools").contains(b))applyTemplate(b.dataset.ak2Template);
-  });
-  window.akExportSelfTest=function(){
-    const r={mediaRecorder:!!window.MediaRecorder,canvasStream:!!(window.HTMLCanvasElement&&HTMLCanvasElement.prototype.captureStream),mp4:false,webm:false,pip:typeof preparePIPExport==="function"&&typeof drawPIPLayersExport==="function",keyframes:typeof keyframeExportState==="function"};
-    if(window.MediaRecorder&&MediaRecorder.isTypeSupported){r.mp4=MediaRecorder.isTypeSupported("video/mp4;codecs=avc1.42E01E,mp4a.40.2")||MediaRecorder.isTypeSupported("video/mp4");r.webm=MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")||MediaRecorder.isTypeSupported("video/webm");}
-    setStatus("🧪 Export Test: "+(r.mp4?"MP4":"WebM fallback")+" • Canvas "+(r.canvasStream?"OK":"Unavailable")+" • PIP/Keyframes ready");
-    return r;
-  };
-
-})();
