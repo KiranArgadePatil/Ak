@@ -739,8 +739,8 @@ function openMultiTrackEditor(){tools.innerHTML='<b>🎚️ Multi-track</b><butt
     const b=e.target.closest("[data-ak2-template]"); if(b&&$id("tools")&&!$id("tools").contains(b))applyTemplate(b.dataset.ak2Template);
   });
   window.akExportSelfTest=function(){
-    const r={mediaRecorder:!!window.MediaRecorder,canvasStream:!!HTMLCanvasElement.prototype.captureStream,mp4:false,webm:false,pip:true,keyframes:true};
-    if(window.MediaRecorder&&MediaRecorder.isTypeSupported){r.mp4=MediaRecorder.isTypeSupported("video/mp4");r.webm=MediaRecorder.isTypeSupported("video/webm");}
+    const r={mediaRecorder:!!window.MediaRecorder,canvasStream:!!(window.HTMLCanvasElement&&HTMLCanvasElement.prototype.captureStream),mp4:false,webm:false,pip:typeof preparePIPExport==="function"&&typeof drawPIPLayersExport==="function",keyframes:typeof keyframeExportState==="function"};
+    if(window.MediaRecorder&&MediaRecorder.isTypeSupported){r.mp4=MediaRecorder.isTypeSupported("video/mp4;codecs=avc1.42E01E,mp4a.40.2")||MediaRecorder.isTypeSupported("video/mp4");r.webm=MediaRecorder.isTypeSupported("video/webm;codecs=vp9,opus")||MediaRecorder.isTypeSupported("video/webm");}
     setStatus("🧪 Export Test: "+(r.mp4?"MP4":"WebM fallback")+" • Canvas "+(r.canvasStream?"OK":"Unavailable")+" • PIP/Keyframes ready");
     return r;
   };
