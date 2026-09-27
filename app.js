@@ -24,6 +24,7 @@
   window.msg=window.msg||function(t,err){const s=E("status");if(s){s.textContent=String(t||"");s.style.color=err?"#ff6b6b":""}else console.log(t)};
   window.mimeType=window.mimeType||function(){if(!window.MediaRecorder)return "";const a=["video/mp4;codecs=avc1.42E01E,mp4a.40.2","video/mp4","video/webm;codecs=vp9,opus","video/webm;codecs=vp8,opus","video/webm"];return a.find(x=>MediaRecorder.isTypeSupported(x))||""};
   window.extFor=window.extFor||function(m){return String(m||"").startsWith("video/mp4")?"mp4":"webm"};
+  window.applyEffectPreview=window.applyEffectPreview||function(){const v=E("video"),c=window.settings?window.settings():{};if(v)v.style.filter=c.effectFilter||c.filter||"none"};
   function ensureClip(i){
     if(!window.clipSettings[i])window.clipSettings[i]={zoom:1,rotation:0,opacity:1,brightness:1,contrast:1,saturation:1,filter:"none",speed:1,duration:window.photoDuration};
     return window.clipSettings[i];
