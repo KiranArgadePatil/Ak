@@ -611,13 +611,22 @@ function pushHistory(){
       const c=(typeof clipSettings!=="undefined"&&clipSettings[i])||{};
       const b=document.createElement("div");b.className="clip-block";b.dataset.clip=i;
       b.textContent=(i===currentIndex?"▶ ":"")+((f&&f.name)||("Clip "+(i+1)));
-      b.title="Clip "+(i+1)+" • "+(Number(c.trimStart||0).toFixed(1))+"s–"+(c.trimEnd!=null?Number(c.trimEnd).toFixed(1):"end");
-      b.onclick=()=>{currentIndex=i;try{load(f)}catch(e){try{loadFile(f,i)}catch(x){}}};
+      b.title="Clip "+(i+1)+" • "+(Number(c.trimStart||0).toFixed(1))+"s–"+(c.trimEnd!=null?Number(c.trimEnd).toFixed(1):"end")+" • Tap=select";
+      b.onclick=(ev)=>{ev.stopPropagation();currentIndex=i;try{load(f)}catch(e){try{loadFile(f,i)}catch(x){}}renderTimeline()};
       el.appendChild(b);
     });
     if(Array.isArray(splitPoints)&&splitPoints.length){const m=document.createElement("small");m.textContent="✂ Split: "+splitPoints.map(x=>fmt(x)).join(" • ");el.appendChild(m)}
+    const play=document.createElement("div");play.className="ak-timeline-playhead";el.appendChild(play);
+    const scrub=ev=>{
+      if(!files.length||!video||!video.duration||!Number.isFinite(video.duration))return;
+      const r=el.getBoundingClientRect(),x=Math.max(0,Math.min(r.width,ev.clientX-r.left));
+      video.currentTime=(x/r.width)*video.duration;play.style.left=Math.round((x/r.width)*100)+"%";
+    };
+    el.onpointerdown=ev=>{if(ev.target.classList.contains("clip-block"))return;scrub(ev);el.setPointerCapture?.(ev.pointerId)};
+    el.onpointermove=ev=>{if(el.hasPointerCapture?.(ev.pointerId))scrub(ev)};
+    el.onpointerup=ev=>{try{el.releasePointerCapture?.(ev.pointerId)}catch(e){}};
   };
-  window.renderKeyframeTracks=window.renderKeyframeTracks||function(){
+window.renderKeyframeTracks=window.renderKeyframeTracks||function(){
     const el=document.getElementById("track");if(!el||!Array.isArray(keyframes))return;
     const n=keyframes.filter(k=>k.clip===currentIndex).length;
     el.dataset.keyframes=n;
