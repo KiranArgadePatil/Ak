@@ -44,9 +44,6 @@ function renderAudioTrimBlock(){const el=document.getElementById("audioTrack");i
 
 function applyAudioTimeline(){const a=audioTimelineState(),d=Number(a.end??999999);if(typeof musicFile!=="undefined"&&musicFile){const label=document.querySelector("#audioTrack .audio-clip-label");if(label)label.textContent="🎵 "+musicFile.name+" • "+Number(a.start||0).toFixed(1)+"s–"+(d===999999?"end":d.toFixed(1)+"s")+" • offset "+Number(a.offset||0).toFixed(1)+"s"}renderOverlayTracks();renderAudioWaveform()}
 function audioBeatMarkers(){const a=audioTimelineState();if(!Array.isArray(a.beats))a.beats=[];return a.beats}
-async 
-
-
 async function speechToTextCaptions(){
  if(!files.length){msg("आधी video जोडा.",true);return}
  const f=files[currentIndex]||files[0];
